@@ -2,8 +2,8 @@ package main
 
 import (
 	"log"
-	"nudam-trading-bot/ctrader_api"
-	"nudam-trading-bot/helpers/configs_helper"
+	"nudam-ctrader-api/ctrader_api"
+	"nudam-ctrader-api/helpers/configs_helper"
 )
 
 var (

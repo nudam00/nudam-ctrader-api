@@ -2,7 +2,7 @@ package configs_helper
 
 import (
 	"log"
-	"nudam-trading-bot/types/common"
+	"nudam-ctrader-api/types/common"
 
 	"github.com/spf13/viper"
 )

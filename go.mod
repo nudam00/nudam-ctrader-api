@@ -1,4 +1,4 @@
-module nudam-trading-bot
+module nudam-ctrader-api
 
 go 1.21.3
 

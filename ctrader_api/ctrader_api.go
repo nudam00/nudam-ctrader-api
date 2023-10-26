@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"log"
 	"net/url"
-	"nudam-trading-bot/helpers/configs_helper"
-	"nudam-trading-bot/helpers/ctrader_api_helper"
-	"nudam-trading-bot/types/ctrader_types"
+	"nudam-ctrader-api/helpers/configs_helper"
+	"nudam-ctrader-api/helpers/ctrader_api_helper"
+	"nudam-ctrader-api/types/ctrader_types"
 
 	"github.com/gorilla/websocket"
 )
