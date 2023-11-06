@@ -12,6 +12,7 @@ var (
 	CTraderAccountConfig common.CTraderAccountConfig
 )
 
+// Initializes cTrader config with basic variables.
 func InitializeCTraderConfig(path string) error {
 	log.Printf("initializes config...")
 
