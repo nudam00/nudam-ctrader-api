@@ -8,6 +8,10 @@ import (
 
 var (
 	config_path = "./configs"
+	numberDays  = 30
+	period      = "M15"
+	symbol      = "EURUSD"
+	countBars   = uint32(50)
 )
 
 func main() {
@@ -23,6 +27,11 @@ func main() {
 	}
 
 	err = api.SaveAvailableSymbols()
+	if err != nil {
+		log.Panic(err)
+	}
+
+	err = api.GetTrendbars(numberDays, period, symbol, countBars)
 	if err != nil {
 		log.Panic(err)
 	}

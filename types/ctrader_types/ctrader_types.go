@@ -9,6 +9,8 @@ var PayloadTypes = map[string]int{
 	"ProtoOAAccountAuthRes":     2103,
 	"ProtoOASymbolsListReq":     2114,
 	"ProtoOASymbolsListRes":     2115,
+	"ProtoOAGetTrendbarsReq":    2137,
+	"ProtoOAGetTrendbarsRes":    2138,
 }
 
 type Payload interface{}
@@ -37,4 +39,21 @@ type ProtoOASymbolsListReq struct {
 type ProtoOASymbolsListRes struct {
 	CtidTraderAccountId int64           `json:"ctidTraderAccountId"`
 	Symbol              []assets.Symbol `json:"symbol"`
+}
+
+type ProtoOAGetTrendbarsReq struct {
+	CtidTraderAccountId int64  `json:"ctidTraderAccountId"`
+	FromTimestamp       int64  `json:"fromTimestamp"`
+	ToTimestamp         int64  `json:"toTimestamp"`
+	Period              int    `json:"period"`
+	SymbolId            int64  `json:"symbolId"`
+	Count               uint32 `json:"count"`
+}
+
+type ProtoOAGetTrendbarsRes struct {
+	CtidTraderAccountId int64             `json:"ctidTraderAccountId"`
+	Period              int               `json:"period"`
+	Timestamp           int64             `json:"timestamp"`
+	Trendbar            []assets.Trendbar `json:"trendbar"`
+	SymbolId            int64             `json:"symbolId"`
 }

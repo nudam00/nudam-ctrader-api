@@ -3,6 +3,7 @@ package ctrader_api_helper
 import (
 	"fmt"
 	"log"
+	"nudam-ctrader-api/types/assets"
 	"strconv"
 	"strings"
 
@@ -50,4 +51,14 @@ func CheckResponse(resp []byte, expected int) error {
 		return err
 	}
 	return nil
+}
+
+// Finds symbol id based on given name.
+func FindSymbolId(symbolName string) (int64, error) {
+	for _, symbol := range assets.Symbols {
+		if symbol.SymbolName == symbolName {
+			return symbol.SymbolId, nil
+		}
+	}
+	return 0, fmt.Errorf("symbol %s not found", symbolName)
 }

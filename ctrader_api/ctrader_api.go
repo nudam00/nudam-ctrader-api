@@ -9,6 +9,7 @@ import (
 	"nudam-ctrader-api/helpers/ctrader_api_helper"
 	"nudam-ctrader-api/types/assets"
 	"nudam-ctrader-api/types/ctrader_types"
+	"time"
 
 	"github.com/gorilla/websocket"
 )
@@ -117,6 +118,64 @@ func (api *CTraderAPI) SaveAvailableSymbols() error {
 		return err
 	}
 	assets.Symbols = protoOASymbolsListRes.Payload.Symbol
+
+	return nil
+}
+
+// Get trendbars based on given symbol.
+func (api *CTraderAPI) GetTrendbars(numberDays int, period string, symbol string, countBars uint32) error {
+	log.Println("getting trendbars...")
+
+	now := time.Now()
+	fromTime := now.AddDate(0, 0, -numberDays)
+	fromTimestamp := fromTime.UnixNano() / int64(time.Millisecond)
+	toTimestamp := now.UnixNano() / int64(time.Millisecond)
+	periodId := assets.Periods[period]
+	symbolId, err := ctrader_api_helper.FindSymbolId(symbol)
+	if err != nil {
+		return err
+	}
+	count := countBars
+
+	protoOAGetTrendbarsReq := ctrader_types.Message[ctrader_types.ProtoOAGetTrendbarsReq]{
+		ClientMsgID: ctrader_api_helper.GetClientMsgID(),
+		PayloadType: ctrader_types.PayloadTypes["ProtoOAGetTrendbarsReq"],
+		Payload: ctrader_types.ProtoOAGetTrendbarsReq{
+			CtidTraderAccountId: configs_helper.CTraderAccountConfig.CtidTraderAccountId,
+			FromTimestamp:       fromTimestamp,
+			ToTimestamp:         toTimestamp,
+			Period:              periodId,
+			SymbolId:            symbolId,
+			Count:               count,
+		},
+	}
+
+	if err := ctrader_api_helper.SendMsg(api.wsConn, protoOAGetTrendbarsReq); err != nil {
+		return err
+	}
+
+	resp, err := ctrader_api_helper.ReadMsg(api.wsConn)
+	if err != nil {
+		return err
+	}
+
+	if err = ctrader_api_helper.CheckResponse(resp, ctrader_types.PayloadTypes["ProtoOAGetTrendbarsRes"]); err != nil {
+		return err
+	}
+
+	var protoOAGetTrendbarsRes ctrader_types.Message[ctrader_types.ProtoOAGetTrendbarsRes]
+	err = json.Unmarshal(resp, &protoOAGetTrendbarsRes)
+	if err != nil {
+		return err
+	}
+
+	var closePrices []int64
+	for _, bar := range protoOAGetTrendbarsRes.Payload.Trendbar {
+		closePrice := bar.Low + int64(bar.DeltaClose)
+		closePrices = append(closePrices, closePrice)
+	}
+
+	log.Println("Close Prices: ", closePrices)
 
 	return nil
 }
