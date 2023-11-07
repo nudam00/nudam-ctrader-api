@@ -1,0 +1,30 @@
+{
+  "trader_configuration": {
+    "payloadtypes": {
+      "protooaapplicationauthreq": 2100,
+      "protooaapplicationauthres": 2101,
+      "protooaaccountauthreq": 2102,
+      "protooaaccountauthres": 2103,
+      "protooasymbolslistreq": 2114,
+      "protooasymbolslistres": 2115,
+      "protooagettrendbarsreq": 2137,
+      "protooagettrendbarsres": 2138
+    },
+    "periods": {
+      "m1": { "value": 1, "countBars": 1440, "numberDays": 1 },
+      "m2": { "value": 2, "countBars": 720, "numberDays": 1 },
+      "m3": { "value": 3, "countBars": 480, "numberDays": 1 },
+      "m4": { "value": 4, "countBars": 360, "numberDays": 1 },
+      "m5": { "value": 5, "countBars": 288, "numberDays": 1 },
+      "m10": { "value": 6, "countBars": 144, "numberDays": 2 },
+      "m15": { "value": 7, "countBars": 96, "numberDays": 5 },
+      "m30": { "value": 8, "countBars": 48, "numberDays": 7 },
+      "h1": { "value": 9, "countBars": 24, "numberDays": 14 },
+      "h4": { "value": 10, "countBars": 6, "numberDays": 49 },
+      "h12": { "value": 11, "countBars": 2, "numberDays": 147 },
+      "d1": { "value": 12, "countBars": 1, "numberDays": 287 },
+      "w1": { "value": 13, "countBars": 0.14, "numberDays": 1407 },
+      "mn1": { "value": 14, "countBars": 0.03, "numberDays": 6167 }
+    }
+  }
+}

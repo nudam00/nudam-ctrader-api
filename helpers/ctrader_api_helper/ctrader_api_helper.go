@@ -3,7 +3,7 @@ package ctrader_api_helper
 import (
 	"fmt"
 	"log"
-	"nudam-ctrader-api/types/constants"
+	"nudam-ctrader-api/helpers/configs_helper"
 	"nudam-ctrader-api/types/ctrader"
 	"strconv"
 	"strings"
@@ -79,6 +79,6 @@ func CalculateTimestamps(numberDays int) (int64, int64) {
 }
 
 // Calculates the amount of bars based on given period.
-func CalculateCountBars(period string, numberDays int) uint32 {
-	return constants.CountBars[period] * uint32(numberDays)
+func CalculateCountBars(period string) uint32 {
+	return configs_helper.TraderConfiguration.Periods[period].CountBars * configs_helper.TraderConfiguration.Periods[period].NumberDays
 }

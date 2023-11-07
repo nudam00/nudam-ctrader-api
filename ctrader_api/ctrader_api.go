@@ -7,23 +7,21 @@ import (
 	"nudam-ctrader-api/helpers/configs_helper"
 	"nudam-ctrader-api/helpers/ctrader_api_helper"
 	"nudam-ctrader-api/strategy"
-	"nudam-ctrader-api/types/constants"
 	"nudam-ctrader-api/types/ctrader"
 
 	"github.com/gorilla/websocket"
 )
 
 type CTraderAPI struct {
-	wsConn     *websocket.Conn
-	symbols    []ctrader.Symbol
-	numberDays int
-	period     string
-	symbol     string
+	wsConn  *websocket.Conn
+	symbols []ctrader.Symbol
+	period  string
+	symbol  string
 }
 
 // Initalizes new cTrader api.
-func NewCTraderAPI(numberDays int, period string, symbol string) *CTraderAPI {
-	return &CTraderAPI{numberDays: numberDays, period: period, symbol: symbol}
+func NewCTraderAPI(period string, symbol string) *CTraderAPI {
+	return &CTraderAPI{period: period, symbol: symbol}
 }
 
 // Initialize cTrader connection with available symbols.
@@ -71,7 +69,7 @@ func (api *CTraderAPI) initializeWsDialer() error {
 func (api *CTraderAPI) authenticate() error {
 	protoOAApplicationAuthReq := ctrader.Message[ctrader.ProtoOAApplicationAuthReq]{
 		ClientMsgID: ctrader_api_helper.GetClientMsgID(),
-		PayloadType: constants.PayloadTypes["ProtoOAApplicationAuthReq"],
+		PayloadType: configs_helper.TraderConfiguration.PayloadTypes["protooaapplicationauthreq"],
 		Payload: ctrader.ProtoOAApplicationAuthReq{
 			ClientId:     configs_helper.CTraderAccountConfig.ClientId,
 			ClientSecret: configs_helper.CTraderAccountConfig.ClientSecret,
@@ -85,13 +83,13 @@ func (api *CTraderAPI) authenticate() error {
 	if err != nil {
 		return err
 	}
-	if err = ctrader_api_helper.CheckResponse(resp, constants.PayloadTypes["ProtoOAApplicationAuthRes"]); err != nil {
+	if err = ctrader_api_helper.CheckResponse(resp, configs_helper.TraderConfiguration.PayloadTypes["protooaapplicationauthres"]); err != nil {
 		return err
 	}
 
 	protoOAAccountAuthReq := ctrader.Message[ctrader.ProtoOAAccountAuthReq]{
 		ClientMsgID: ctrader_api_helper.GetClientMsgID(),
-		PayloadType: constants.PayloadTypes["ProtoOAAccountAuthReq"],
+		PayloadType: configs_helper.TraderConfiguration.PayloadTypes["protooaaccountauthreq"],
 		Payload: ctrader.ProtoOAAccountAuthReq{
 			CtidTraderAccountId: configs_helper.CTraderAccountConfig.CtidTraderAccountId,
 			AccessToken:         configs_helper.CTraderAccountConfig.AccessToken,
@@ -105,7 +103,7 @@ func (api *CTraderAPI) authenticate() error {
 	if err != nil {
 		return err
 	}
-	if err = ctrader_api_helper.CheckResponse(resp, constants.PayloadTypes["ProtoOAAccountAuthRes"]); err != nil {
+	if err = ctrader_api_helper.CheckResponse(resp, configs_helper.TraderConfiguration.PayloadTypes["protooaaccountauthres"]); err != nil {
 		return err
 	}
 
@@ -139,7 +137,7 @@ func (api *CTraderAPI) saveAvailableSymbols() error {
 func (api *CTraderAPI) getAvailableSymbols() ([]byte, error) {
 	protoOASymbolsListReq := ctrader.Message[ctrader.ProtoOASymbolsListReq]{
 		ClientMsgID: ctrader_api_helper.GetClientMsgID(),
-		PayloadType: constants.PayloadTypes["ProtoOASymbolsListReq"],
+		PayloadType: configs_helper.TraderConfiguration.PayloadTypes["protooasymbolslistreq"],
 		Payload: ctrader.ProtoOASymbolsListReq{
 			CtidTraderAccountId:    configs_helper.CTraderAccountConfig.CtidTraderAccountId,
 			IncludeArchivedSymbols: false,
@@ -153,7 +151,7 @@ func (api *CTraderAPI) getAvailableSymbols() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err = ctrader_api_helper.CheckResponse(resp, constants.PayloadTypes["ProtoOASymbolsListRes"]); err != nil {
+	if err = ctrader_api_helper.CheckResponse(resp, configs_helper.TraderConfiguration.PayloadTypes["protooasymbolslistres"]); err != nil {
 		return nil, err
 	}
 
@@ -161,16 +159,16 @@ func (api *CTraderAPI) getAvailableSymbols() ([]byte, error) {
 }
 
 // Get trendbars based on given symbol.
-func (api *CTraderAPI) GetTrendbars() error {
+func (api *CTraderAPI) GetTrendbars(trader *strategy.Trader) error {
 	ctrader_api_helper.LogMessage("getting trendbars...")
 
-	fromTimestamp, toTimestamp := ctrader_api_helper.CalculateTimestamps(api.numberDays)
-	periodId := constants.Periods[api.period]
+	fromTimestamp, toTimestamp := ctrader_api_helper.CalculateTimestamps(int(configs_helper.TraderConfiguration.Periods[api.period].NumberDays))
+	periodId := configs_helper.TraderConfiguration.Periods[api.period].Value
 	symbolId, err := ctrader_api_helper.FindSymbolId(api.symbol, api.symbols)
 	if err != nil {
 		return err
 	}
-	count := ctrader_api_helper.CalculateCountBars(api.period, api.numberDays)
+	count := ctrader_api_helper.CalculateCountBars(api.period)
 
 	resp, err := api.sendMsgTrendbars(fromTimestamp, toTimestamp, periodId, symbolId, count)
 	if err != nil {
@@ -189,7 +187,7 @@ func (api *CTraderAPI) GetTrendbars() error {
 		closePrices = append(closePrices, float64(closePrice))
 	}
 
-	strategy.GetSignal(closePrices)
+	trader.GetEMAs(closePrices)
 
 	return nil
 }
@@ -198,7 +196,7 @@ func (api *CTraderAPI) GetTrendbars() error {
 func (api *CTraderAPI) sendMsgTrendbars(fromTimestamp int64, toTimestamp int64, periodId int, symbolId int64, count uint32) ([]byte, error) {
 	protoOAGetTrendbarsReq := ctrader.Message[ctrader.ProtoOAGetTrendbarsReq]{
 		ClientMsgID: ctrader_api_helper.GetClientMsgID(),
-		PayloadType: constants.PayloadTypes["ProtoOAGetTrendbarsReq"],
+		PayloadType: configs_helper.TraderConfiguration.PayloadTypes["protooagettrendbarsreq"],
 		Payload: ctrader.ProtoOAGetTrendbarsReq{
 			CtidTraderAccountId: configs_helper.CTraderAccountConfig.CtidTraderAccountId,
 			FromTimestamp:       fromTimestamp,
@@ -216,7 +214,7 @@ func (api *CTraderAPI) sendMsgTrendbars(fromTimestamp int64, toTimestamp int64, 
 	if err != nil {
 		return nil, err
 	}
-	if err = ctrader_api_helper.CheckResponse(resp, constants.PayloadTypes["ProtoOAGetTrendbarsRes"]); err != nil {
+	if err = ctrader_api_helper.CheckResponse(resp, configs_helper.TraderConfiguration.PayloadTypes["protooagettrendbarsres"]); err != nil {
 		return nil, err
 	}
 
