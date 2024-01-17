@@ -73,24 +73,17 @@ type Trendbar struct {
 }
 
 // Get current price request message.
-type ProtoOAGetTickDataReq struct {
+type ProtoOASubscribeSpotsReq struct {
 	CtidTraderAccountId int64 `json:"ctidTraderAccountId"`
 	SymbolId            int64 `json:"symbolId"`
-	Type                int64 `json:"type"`
-	FromTimestamp       int64 `json:"fromTimestamp"`
-	ToTimestamp         int64 `json:"toTimestamp"`
 }
 
 // Get current price response message.
-type ProtoOAGetTickDataRes struct {
-	CtidTraderAccountId int64    `json:"ctidTraderAccountId"`
-	TickData            TickData `json:"tickData"`
-	HasMore             bool     `json:"hasMore"`
-}
-
-type TickData struct {
-	Timestamp int64 `json:"timestamp"`
-	Tick      int64 `json:"tick"`
+type ProtoOASpotEvent struct {
+	CtidTraderAccountId int64  `json:"ctidTraderAccountId"`
+	SymbolId            int64  `json:"symbolId"`
+	Bid                 uint64 `json:"bid"`
+	Ask                 uint64 `json:"ask"`
 }
 
 // Send new order request message.

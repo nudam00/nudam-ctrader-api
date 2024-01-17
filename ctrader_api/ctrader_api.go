@@ -221,8 +221,45 @@ func (api *CTraderAPI) sendMsgTrendbars(fromTimestamp int64, toTimestamp int64, 
 	return resp, nil
 }
 
+// Sends message to get current price.
+func (api *CTraderAPI) SendMsgSubscribeSpot() (*ctrader.Message[ctrader.ProtoOASpotEvent], error) {
+	symbolId, err := ctrader_api_helper.FindSymbolId(api.symbol, api.symbols)
+	if err != nil {
+		return nil, err
+	}
+
+	protoOASubscribeSpotsReq := ctrader.Message[ctrader.ProtoOASubscribeSpotsReq]{
+		ClientMsgID: ctrader_api_helper.GetClientMsgID(),
+		PayloadType: configs_helper.TraderConfiguration.PayloadTypes["protooasubscribespotsreq"],
+		Payload: ctrader.ProtoOASubscribeSpotsReq{
+			CtidTraderAccountId: configs_helper.CTraderAccountConfig.CtidTraderAccountId,
+			SymbolId:            symbolId,
+		},
+	}
+
+	if err := ctrader_api_helper.SendMsg(api.wsConn, protoOASubscribeSpotsReq); err != nil {
+		return nil, err
+	}
+	resp, err := ctrader_api_helper.ReadMsg(api.wsConn)
+	if err != nil {
+		return nil, err
+	}
+
+	if err = ctrader_api_helper.CheckResponse(resp, configs_helper.TraderConfiguration.PayloadTypes["protooaspotevent"]); err != nil {
+		return nil, err
+	}
+
+	var protoOASpotEvent *ctrader.Message[ctrader.ProtoOASpotEvent]
+	err = json.Unmarshal(resp, &protoOASpotEvent)
+	if err != nil {
+		return nil, err
+	}
+
+	return protoOASpotEvent, nil
+}
+
 // Sends message to create new order.
-func (api *CTraderAPI) sendMsgNewOrder(orderType, tradeSide, volume int64, stopLoss, takeProfit *float64, clientOrderId *string, traillingStopLoss *bool) ([]byte, error) {
+func (api *CTraderAPI) SendMsgNewOrder(orderType, tradeSide, volume int64, stopLoss, takeProfit *float64, clientOrderId *string, traillingStopLoss *bool) ([]byte, error) {
 	symbolId, err := ctrader_api_helper.FindSymbolId(api.symbol, api.symbols)
 	if err != nil {
 		return nil, err
@@ -249,6 +286,10 @@ func (api *CTraderAPI) sendMsgNewOrder(orderType, tradeSide, volume int64, stopL
 	}
 	resp, err := ctrader_api_helper.ReadMsg(api.wsConn)
 	if err != nil {
+		return nil, err
+	}
+
+	if err = ctrader_api_helper.CheckResponse(resp, configs_helper.TraderConfiguration.PayloadTypes["protooaexecutionevent"]); err != nil {
 		return nil, err
 	}
 

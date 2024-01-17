@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"nudam-ctrader-api/ctrader_api"
 	"nudam-ctrader-api/helpers/configs_helper"
@@ -30,6 +31,9 @@ func main() {
 	if err != nil {
 		log.Panic(err)
 	}
+
+	res, _ := api.SendMsgSubscribeSpot()
+	fmt.Println(res)
 
 	// re, err := api.SendMsgNewOrder(int64(configs_helper.TraderConfiguration.OrderType["market"]), int64(configs_helper.TraderConfiguration.TradeSide["buy"]), int64(100000))
 	// fmt.Println(string(re))
