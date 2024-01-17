@@ -30,4 +30,7 @@ func main() {
 	if err != nil {
 		log.Panic(err)
 	}
+
+	// re, err := api.SendMsgNewOrder(int64(configs_helper.TraderConfiguration.OrderType["market"]), int64(configs_helper.TraderConfiguration.TradeSide["buy"]), int64(100000))
+	// fmt.Println(string(re))
 }

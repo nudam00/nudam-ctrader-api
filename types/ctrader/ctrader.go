@@ -8,21 +8,25 @@ type Message[T Payload] struct {
 	Payload     T      `json:"payload"`
 }
 
+// Auth.
 type ProtoOAApplicationAuthReq struct {
 	ClientId     string `json:"clientId"`
 	ClientSecret string `json:"clientSecret"`
 }
 
+// Auth.
 type ProtoOAAccountAuthReq struct {
 	CtidTraderAccountId int64  `json:"ctidTraderAccountId"`
 	AccessToken         string `json:"accessToken"`
 }
 
+// Get available symbols request message.
 type ProtoOASymbolsListReq struct {
 	CtidTraderAccountId    int64 `json:"ctidTraderAccountId"`
 	IncludeArchivedSymbols bool  `json:"includeArchivedSymbols"`
 }
 
+// Get available symbols response message.
 type ProtoOASymbolsListRes struct {
 	CtidTraderAccountId int64    `json:"ctidTraderAccountId"`
 	Symbol              []Symbol `json:"symbol"`
@@ -39,6 +43,7 @@ type Symbol struct {
 	SortingNumber    float64 `json:"sortingNumber"`
 }
 
+// Get trendbars request message.
 type ProtoOAGetTrendbarsReq struct {
 	CtidTraderAccountId int64  `json:"ctidTraderAccountId"`
 	FromTimestamp       int64  `json:"fromTimestamp"`
@@ -48,6 +53,7 @@ type ProtoOAGetTrendbarsReq struct {
 	Count               uint32 `json:"count"`
 }
 
+// Get trendbars response message.
 type ProtoOAGetTrendbarsRes struct {
 	CtidTraderAccountId int64      `json:"ctidTraderAccountId"`
 	Period              int        `json:"period"`
@@ -64,4 +70,51 @@ type Trendbar struct {
 	DeltaClose            uint64 `json:"deltaClose"`
 	DeltaHigh             uint64 `json:"deltaHigh"`
 	UTCTimestampInMinutes uint32 `json:"utcTimestampInMinutes"`
+}
+
+// Get current price request message.
+type ProtoOAGetTickDataReq struct {
+	CtidTraderAccountId int64 `json:"ctidTraderAccountId"`
+	SymbolId            int64 `json:"symbolId"`
+	Type                int64 `json:"type"`
+	FromTimestamp       int64 `json:"fromTimestamp"`
+	ToTimestamp         int64 `json:"toTimestamp"`
+}
+
+// Get current price response message.
+type ProtoOAGetTickDataRes struct {
+	CtidTraderAccountId int64    `json:"ctidTraderAccountId"`
+	TickData            TickData `json:"tickData"`
+	HasMore             bool     `json:"hasMore"`
+}
+
+type TickData struct {
+	Timestamp int64 `json:"timestamp"`
+	Tick      int64 `json:"tick"`
+}
+
+// Send new order request message.
+type ProtoOANewOrderReq struct {
+	CtidTraderAccountId int64    `json:"ctidTraderAccountId"`
+	SymbolId            int64    `json:"symbolId"`
+	OrderType           int64    `json:"orderType"`
+	TradeSide           int64    `json:"tradeSide"`
+	Volume              int64    `json:"volume"`
+	LimitPrice          *float64 `json:"limitPrice"`
+	StopPrice           *float64 `json:"stopPrice"`
+	TimeInForce         *int64   `json:"timeInForce"`
+	ExpirationTimestamp *int64   `json:"expirationTimestamp"`
+	StopLoss            *float64 `json:"stopLoss"`
+	TakeProfit          *float64 `json:"takeProfit"`
+	Comment             *string  `json:"comment"`
+	BaseSlippagePrice   *float64 `json:"baseSlippagePrice"`
+	SlippageInPoints    *int64   `json:"slippageInPoints"`
+	Label               *string  `json:"label"`
+	PositionId          *int64   `json:"positionId"`
+	ClientOrderId       *string  `json:"clientOrderId"`
+	RelativeStopLoss    *int64   `json:"relativeStopLoss"`
+	RelativeTakeProfit  *int64   `json:"relativeTakeProfit"`
+	GuaranteedStopLoss  *bool    `json:"guaranteedStopLoss"`
+	TrailingStopLoss    *bool    `json:"trailingStopLoss"`
+	StopTriggerMethod   *int64   `json:"stopTriggerMethod"`
 }

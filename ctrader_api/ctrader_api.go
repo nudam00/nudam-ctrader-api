@@ -220,3 +220,37 @@ func (api *CTraderAPI) sendMsgTrendbars(fromTimestamp int64, toTimestamp int64, 
 
 	return resp, nil
 }
+
+// Sends message to create new order.
+func (api *CTraderAPI) sendMsgNewOrder(orderType, tradeSide, volume int64, stopLoss, takeProfit *float64, clientOrderId *string, traillingStopLoss *bool) ([]byte, error) {
+	symbolId, err := ctrader_api_helper.FindSymbolId(api.symbol, api.symbols)
+	if err != nil {
+		return nil, err
+	}
+
+	protoOANewOrderReq := ctrader.Message[ctrader.ProtoOANewOrderReq]{
+		ClientMsgID: ctrader_api_helper.GetClientMsgID(),
+		PayloadType: configs_helper.TraderConfiguration.PayloadTypes["protooaneworderreq"],
+		Payload: ctrader.ProtoOANewOrderReq{
+			CtidTraderAccountId: configs_helper.CTraderAccountConfig.CtidTraderAccountId,
+			SymbolId:            symbolId,
+			OrderType:           orderType,
+			TradeSide:           tradeSide,
+			Volume:              volume,
+			StopLoss:            stopLoss,
+			TakeProfit:          takeProfit,
+			ClientOrderId:       clientOrderId,
+			TrailingStopLoss:    traillingStopLoss,
+		},
+	}
+
+	if err := ctrader_api_helper.SendMsg(api.wsConn, protoOANewOrderReq); err != nil {
+		return nil, err
+	}
+	resp, err := ctrader_api_helper.ReadMsg(api.wsConn)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, nil
+}

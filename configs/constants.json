@@ -8,7 +8,10 @@
       "protooasymbolslistreq": 2114,
       "protooasymbolslistres": 2115,
       "protooagettrendbarsreq": 2137,
-      "protooagettrendbarsres": 2138
+      "protooagettrendbarsres": 2138,
+      "protooagettickdatareq": 2145,
+      "protooagettickdatares": 2146,
+      "protooaneworderreq": 2106
     },
     "periods": {
       "m1": { "value": 1, "countBars": 1440, "numberDays": 1 },
@@ -25,6 +28,35 @@
       "d1": { "value": 12, "countBars": 1, "numberDays": 287 },
       "w1": { "value": 13, "countBars": 0.14, "numberDays": 1407 },
       "mn1": { "value": 14, "countBars": 0.03, "numberDays": 6167 }
+    },
+    "quoteType": {
+      "bid": 1,
+      "ask": 2
+    },
+    "orderType": {
+      "market": 1,
+      "limit": 2,
+      "stop": 3,
+      "stop_loss_take_profit": 4,
+      "market_range": 5,
+      "stop_limit": 6
+    },
+    "tradeSide": {
+      "buy": 1,
+      "sell": 2
+    },
+    "timeInForce": {
+      "good_till_date": 1,
+      "good_till_cancel": 2,
+      "immediate_or_cancel": 3,
+      "fill_or_kill": 4,
+      "market_on_open": 5
+    },
+    "stopTriggerMethod": {
+      "trade": 1,
+      "opposite": 2,
+      "double_trade": 3,
+      "double_opposite": 4
     }
   }
 }

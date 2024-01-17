@@ -13,8 +13,13 @@ type CTraderAccountConfig struct {
 }
 
 type TraderConfiguration struct {
-	PayloadTypes map[string]int    `json:"payloadTypes"`
-	Periods      map[string]Period `json:"periods"`
+	PayloadTypes      map[string]int    `json:"payloadTypes"`
+	Periods           map[string]Period `json:"periods"`
+	QuoteType         map[string]int    `json:"quoteType"`
+	OrderType         map[string]int    `json:"orderType"`
+	TradeSide         map[string]int    `json:"tradeSide"`
+	TimeInForce       map[string]int    `json:"timeInForce"`
+	StopTriggerMethod map[string]int    `json:"stopTriggerMethod"`
 }
 
 type Period struct {
