@@ -14,31 +14,27 @@ import (
 
 var (
 	config_path  = "./configs"
-	symbolPeriod = map[string]string{"EURUSD": "m1"}
+	symbolPeriod = map[string]string{"EURUSD": "m1", "AUDUSD": "m1"}
 )
 
 func tradeRoutines() {
-	var err error
-
-	apiTrendbars, err := ctrader_api.NewApi()
-	if err != nil {
-		log.Panic(err)
-	}
-
-	apiCurrentPrice, err := ctrader_api.NewApi()
-	if err != nil {
-		log.Panic(err)
-	}
-
 	var wg sync.WaitGroup
 	for symbol, period := range symbolPeriod {
 		wg.Add(1)
 		go func(symbol, period string) {
-			err := apiCurrentPrice.SendMsgSubscribeSpot(symbol)
+			trader := strategy.NewTrader()
+			apiCurrentPrice, err := ctrader_api.NewApi()
 			if err != nil {
 				log.Panic(err)
 			}
-			trader := strategy.NewTrader()
+			err = apiCurrentPrice.SendMsgSubscribeSpot(symbol)
+			if err != nil {
+				log.Panic(err)
+			}
+			apiTrendbars, err := ctrader_api.NewApi()
+			if err != nil {
+				log.Panic(err)
+			}
 
 			for {
 				prices, err := apiCurrentPrice.SendMsgReadMessage()

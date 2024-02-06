@@ -227,9 +227,6 @@ func (api *CTraderAPI) sendMsgTrendbars(fromTimestamp int64, toTimestamp int64, 
 // Subscribes spot to get current price.
 func (api *CTraderAPI) SendMsgSubscribeSpot(symbol string) error {
 	symbolId, err := ctrader_api_helper.FindSymbolId(symbol, api.symbols)
-	if err != nil {
-		return err
-	}
 
 	protoOASubscribeSpotsReq := ctrader.Message[ctrader.ProtoOASubscribeSpotsReq]{
 		ClientMsgID: ctrader_api_helper.GetClientMsgID(),
@@ -243,11 +240,13 @@ func (api *CTraderAPI) SendMsgSubscribeSpot(symbol string) error {
 	if err := ctrader_api_helper.SendMsg(api.wsConn, protoOASubscribeSpotsReq); err != nil {
 		return err
 	}
+
 	resp, err := ctrader_api_helper.ReadMsg(api.wsConn)
 	if err != nil {
 		return err
 	}
-	if err = ctrader_api_helper.CheckResponse(resp, configs_helper.TraderConfiguration.PayloadTypes["protooaspotevent"]); err != nil {
+	err = ctrader_api_helper.CheckResponse(resp, configs_helper.TraderConfiguration.PayloadTypes["protooaspotevent"])
+	if err != nil {
 		return err
 	}
 
@@ -255,7 +254,8 @@ func (api *CTraderAPI) SendMsgSubscribeSpot(symbol string) error {
 	if err != nil {
 		return err
 	}
-	if err = ctrader_api_helper.CheckResponse(resp, configs_helper.TraderConfiguration.PayloadTypes["protooasubscribespotsres"]); err != nil {
+	err = ctrader_api_helper.CheckResponse(resp, configs_helper.TraderConfiguration.PayloadTypes["protooasubscribespotsres"])
+	if err != nil {
 		return err
 	}
 
