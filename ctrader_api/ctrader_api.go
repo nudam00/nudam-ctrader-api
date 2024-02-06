@@ -88,7 +88,7 @@ func (api *CTraderAPI) authenticate() error {
 	if err != nil {
 		return err
 	}
-	if err = ctrader_api_helper.CheckResponse(resp, configs_helper.TraderConfiguration.PayloadTypes["protooaapplicationauthres"]); err != nil {
+	if err = ctrader_api_helper.CheckResponse(resp, configs_helper.TraderConfiguration.PayloadTypes["protooaapplicationauthres"], err); err != nil {
 		return err
 	}
 
@@ -108,7 +108,7 @@ func (api *CTraderAPI) authenticate() error {
 	if err != nil {
 		return err
 	}
-	if err = ctrader_api_helper.CheckResponse(resp, configs_helper.TraderConfiguration.PayloadTypes["protooaaccountauthres"]); err != nil {
+	if err = ctrader_api_helper.CheckResponse(resp, configs_helper.TraderConfiguration.PayloadTypes["protooaaccountauthres"], err); err != nil {
 		return err
 	}
 
@@ -156,7 +156,7 @@ func (api *CTraderAPI) getAvailableSymbols() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err = ctrader_api_helper.CheckResponse(resp, configs_helper.TraderConfiguration.PayloadTypes["protooasymbolslistres"]); err != nil {
+	if err = ctrader_api_helper.CheckResponse(resp, configs_helper.TraderConfiguration.PayloadTypes["protooasymbolslistres"], err); err != nil {
 		return nil, err
 	}
 
@@ -217,7 +217,7 @@ func (api *CTraderAPI) sendMsgTrendbars(fromTimestamp int64, toTimestamp int64, 
 	if err != nil {
 		return nil, err
 	}
-	if err = ctrader_api_helper.CheckResponse(resp, configs_helper.TraderConfiguration.PayloadTypes["protooagettrendbarsres"]); err != nil {
+	if err = ctrader_api_helper.CheckResponse(resp, configs_helper.TraderConfiguration.PayloadTypes["protooagettrendbarsres"], err); err != nil {
 		return nil, err
 	}
 
@@ -245,7 +245,7 @@ func (api *CTraderAPI) SendMsgSubscribeSpot(symbol string) error {
 	if err != nil {
 		return err
 	}
-	err = ctrader_api_helper.CheckResponse(resp, configs_helper.TraderConfiguration.PayloadTypes["protooaspotevent"])
+	err = ctrader_api_helper.CheckResponse(resp, configs_helper.TraderConfiguration.PayloadTypes["protooaspotevent"], err)
 	if err != nil {
 		return err
 	}
@@ -254,7 +254,7 @@ func (api *CTraderAPI) SendMsgSubscribeSpot(symbol string) error {
 	if err != nil {
 		return err
 	}
-	err = ctrader_api_helper.CheckResponse(resp, configs_helper.TraderConfiguration.PayloadTypes["protooasubscribespotsres"])
+	err = ctrader_api_helper.CheckResponse(resp, configs_helper.TraderConfiguration.PayloadTypes["protooasubscribespotsres"], err)
 	if err != nil {
 		return err
 	}
@@ -268,7 +268,7 @@ func (api *CTraderAPI) SendMsgReadMessage() (*ctrader.Message[ctrader.ProtoOASpo
 	if err != nil {
 		return nil, err
 	}
-	if err = ctrader_api_helper.CheckResponse(resp, configs_helper.TraderConfiguration.PayloadTypes["protooaspotevent"]); err != nil {
+	if err = ctrader_api_helper.CheckResponse(resp, configs_helper.TraderConfiguration.PayloadTypes["protooaspotevent"], err); err != nil {
 		return nil, err
 	}
 
@@ -312,7 +312,7 @@ func (api *CTraderAPI) SendMsgNewOrder(symbol string, orderType, tradeSide, volu
 		return nil, err
 	}
 
-	if err = ctrader_api_helper.CheckResponse(resp, configs_helper.TraderConfiguration.PayloadTypes["protooaexecutionevent"]); err != nil {
+	if err = ctrader_api_helper.CheckResponse(resp, configs_helper.TraderConfiguration.PayloadTypes["protooaexecutionevent"], err); err != nil {
 		return nil, err
 	}
 

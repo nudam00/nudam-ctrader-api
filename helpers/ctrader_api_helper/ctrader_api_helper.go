@@ -51,9 +51,9 @@ func ReadMsg(wsConn *websocket.Conn) ([]byte, error) {
 }
 
 // Checks response from message.
-func CheckResponse(resp []byte, expected int) error {
+func CheckResponse(resp []byte, expected int, err error) error {
 	if !strings.Contains(string(resp), strconv.Itoa(expected)) {
-		err := fmt.Errorf("error receiving response from %s", strconv.Itoa(expected))
+		err := fmt.Errorf("error receiving response from %s; error: %s", strconv.Itoa(expected), err.Error())
 		LogError(err, string(resp))
 		return err
 	}

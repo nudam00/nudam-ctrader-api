@@ -22,11 +22,13 @@ func tradeRoutines() {
 	for symbol, period := range symbolPeriod {
 		wg.Add(1)
 		go func(symbol, period string) {
+			defer wg.Done()
 			trader := strategy.NewTrader()
 			apiCurrentPrice, err := ctrader_api.NewApi()
 			if err != nil {
 				log.Panic(err)
 			}
+			time.Sleep(5 * time.Second)
 			err = apiCurrentPrice.SendMsgSubscribeSpot(symbol)
 			if err != nil {
 				log.Panic(err)
@@ -39,7 +41,25 @@ func tradeRoutines() {
 			for {
 				prices, err := apiCurrentPrice.SendMsgReadMessage()
 				if err != nil {
-					log.Panic(err)
+					if err.Error() == "websocket: close 1000 (normal): Bye" {
+						ctrader_api_helper.LogMessage(fmt.Sprintf("%s; %s; %s", symbol, period, "attempting to reconnect due to normal WebSocket closure..."))
+						apiCurrentPrice, err := ctrader_api.NewApi()
+						if err != nil {
+							log.Panic(err)
+						}
+						time.Sleep(5 * time.Second)
+						err = apiCurrentPrice.SendMsgSubscribeSpot(symbol)
+						if err != nil {
+							log.Panic(err)
+						}
+						time.Sleep(5 * time.Second)
+						prices, err = apiCurrentPrice.SendMsgReadMessage()
+						if err != nil {
+							log.Panic(err)
+						}
+					} else {
+						log.Panic(err)
+					}
 				}
 
 				closePrices, err := apiTrendbars.GetTrendbars(symbol, period)
