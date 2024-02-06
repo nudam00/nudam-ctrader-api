@@ -19,8 +19,9 @@ func GetClientMsgID() string {
 }
 
 // Logs error.
-func LogError(err error) {
+func LogError(err error, msg string) {
 	if err != nil {
+		log.Printf("Msg: " + msg)
 		log.Printf("Error: " + err.Error())
 	}
 }
@@ -33,7 +34,7 @@ func LogMessage(msg string) {
 // Sends message to api with body.
 func SendMsg(wsConn *websocket.Conn, msg interface{}) error {
 	if err := wsConn.WriteJSON(msg); err != nil {
-		LogError(err)
+		LogError(err, fmt.Sprintln(msg))
 		return err
 	}
 	return nil
@@ -43,7 +44,7 @@ func SendMsg(wsConn *websocket.Conn, msg interface{}) error {
 func ReadMsg(wsConn *websocket.Conn) ([]byte, error) {
 	_, resp, err := wsConn.ReadMessage()
 	if err != nil {
-		LogError(err)
+		LogError(err, string(resp))
 		return nil, err
 	}
 	return resp, nil
@@ -53,7 +54,7 @@ func ReadMsg(wsConn *websocket.Conn) ([]byte, error) {
 func CheckResponse(resp []byte, expected int) error {
 	if !strings.Contains(string(resp), strconv.Itoa(expected)) {
 		err := fmt.Errorf("error receiving response from %s", strconv.Itoa(expected))
-		LogError(err)
+		LogError(err, string(resp))
 		return err
 	}
 	return nil
