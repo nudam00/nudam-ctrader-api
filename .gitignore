@@ -1,0 +1,4 @@
+src/configs/ctrader_account_config.json
+src/configs/strategy.json
+src/strategy/
+**/.DS_Store
