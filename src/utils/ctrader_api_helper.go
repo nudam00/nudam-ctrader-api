@@ -1,4 +1,4 @@
-package ctrader_api_helper
+package utils
 
 import (
 	"fmt"
@@ -28,7 +28,7 @@ func LogError(err error, msg string) {
 
 // Logs message.
 func LogMessage(msg string) {
-	log.Printf(msg)
+	log.Println(msg)
 }
 
 // Sends message to api with body.

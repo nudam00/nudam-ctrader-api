@@ -1,4 +1,4 @@
 configs/ctrader_account_config.json
 configs/strategy.json
-strategy/strategy.go
+strategy/
 **/.DS_Store

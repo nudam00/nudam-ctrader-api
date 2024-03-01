@@ -1,30 +1,22 @@
-package main
+package runners
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
-	"nudam-ctrader-api/ctrader_api"
-	"nudam-ctrader-api/helpers/configs_helper"
-	"nudam-ctrader-api/helpers/ctrader_api_helper"
+	"nudam-ctrader-api/api"
 	"nudam-ctrader-api/strategy"
+	"nudam-ctrader-api/utils"
 	"sync"
 	"time"
 )
 
-var (
-	config_path  = "./configs"
-	symbolPeriod = map[string]string{"EURUSD": "m1", "AUDUSD": "m1"}
-)
-
-func tradeRoutines() {
+func TradeRoutines(symbolPeriod map[string]string) {
 	var wg sync.WaitGroup
 	for symbol, period := range symbolPeriod {
 		wg.Add(1)
 		go func(symbol, period string) {
 			defer wg.Done()
-			trader := strategy.NewTrader()
-			apiCurrentPrice, err := ctrader_api.NewApi()
+			apiCurrentPrice, err := api.NewApi()
 			if err != nil {
 				log.Panic(err)
 			}
@@ -33,7 +25,7 @@ func tradeRoutines() {
 			if err != nil {
 				log.Panic(err)
 			}
-			apiTrendbars, err := ctrader_api.NewApi()
+			apiTrendbars, err := api.NewApi()
 			if err != nil {
 				log.Panic(err)
 			}
@@ -42,8 +34,8 @@ func tradeRoutines() {
 				prices, err := apiCurrentPrice.SendMsgReadMessage()
 				if err != nil {
 					if err.Error() == "websocket: close 1000 (normal): Bye" {
-						ctrader_api_helper.LogMessage(fmt.Sprintf("%s; %s; %s", symbol, period, "attempting to reconnect due to normal WebSocket closure..."))
-						apiCurrentPrice, err := ctrader_api.NewApi()
+						utils.LogMessage(fmt.Sprintf("%s; %s; %s", symbol, period, "attempting to reconnect due to normal WebSocket closure..."))
+						apiCurrentPrice, err := api.NewApi()
 						if err != nil {
 							log.Panic(err)
 						}
@@ -67,21 +59,30 @@ func tradeRoutines() {
 					log.Panic(err)
 				}
 
-				outPrices, err := json.Marshal(prices)
-				if err != nil {
-					panic(err)
-				}
+				resp, res := strategy.AreIntervalsTrendMatching(apiTrendbars, symbol, period)
+				utils.LogMessage(fmt.Sprintf("%s - %s\n%s", symbol, period, resp))
 
-				ctrader_api_helper.LogMessage(fmt.Sprintf("%s; %s; %s", symbol, period, trader.GetEMAs(closePrices)))
-				ctrader_api_helper.LogMessage(fmt.Sprintf("%s", string(outPrices)))
+				if res {
+					currentTrend := strategy.GetTrendForPeriod(apiTrendbars, symbol, period)
+					EMAs := strategy.GetEMAs(closePrices)
+
+					trader := strategy.NewTrader(EMAs)
+					signal := trader.CheckPriceBetweenEma26Ema50(float64(prices.Payload.Bid), float64(prices.Payload.Ask))
+
+					if currentTrend == strategy.Uptrend && signal == strategy.Short {
+						utils.LogMessage("short")
+						break
+					} else if currentTrend == strategy.Downtrend && signal == strategy.Long {
+						utils.LogMessage("long")
+						break
+					}
+				}
 
 				time.Sleep(5 * time.Second)
 			}
-			// 	// Przetwórz przychodzącą wiadomość
 			// 	if spotEvent, ok := message.(*ctrader.ProtoOASpotEvent); ok && spotEvent.Symbol == symbol {
-			// 		currentPrice := float64(spotEvent.Ask) // Dostosuj do faktycznej struktury danych
-			// 		trader.UpdatePrice(currentPrice)       // Aktualizuj cenę w traderze
-			// 		// Dodatkowa logika handlowa...
+			// 		currentPrice := float64(spotEvent.Ask)
+			// 		trader.UpdatePrice(currentPrice)
 			// 	}
 
 			// re, err := api.SendMsgNewOrder(int64(configs_helper.TraderConfiguration.OrderType["market"]), int64(configs_helper.TraderConfiguration.TradeSide["buy"]), int64(100000))
@@ -89,13 +90,4 @@ func tradeRoutines() {
 		}(symbol, period)
 	}
 	wg.Wait()
-}
-
-func main() {
-	err := configs_helper.InitializeConfig(config_path)
-	if err != nil {
-		log.Panic(err)
-	}
-
-	tradeRoutines()
 }

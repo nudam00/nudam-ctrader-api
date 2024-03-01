@@ -17,11 +17,7 @@
     },
     "periods": {
       "m1": { "value": 1, "countBars": 1440, "numberDays": 1 },
-      "m2": { "value": 2, "countBars": 720, "numberDays": 1 },
-      "m3": { "value": 3, "countBars": 480, "numberDays": 1 },
-      "m4": { "value": 4, "countBars": 360, "numberDays": 1 },
       "m5": { "value": 5, "countBars": 288, "numberDays": 1 },
-      "m10": { "value": 6, "countBars": 144, "numberDays": 2 },
       "m15": { "value": 7, "countBars": 96, "numberDays": 5 },
       "m30": { "value": 8, "countBars": 48, "numberDays": 7 },
       "h1": { "value": 9, "countBars": 24, "numberDays": 14 },
