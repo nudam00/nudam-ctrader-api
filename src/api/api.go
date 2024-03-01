@@ -13,18 +13,21 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-type CTraderAPI struct {
+type CTraderAPI interface {
+	InitalizeCTrader() error
+	GetTrendbars(symbol, period string) ([]float64, error)
+	SendMsgSubscribeSpot(symbol string) error
+	SendMsgReadMessage() (*ctrader.Message[ctrader.ProtoOASpotEvent], error)
+	SendMsgNewOrder(symbol string, orderType, tradeSide, volume int64, stopLoss, takeProfit *float64, clientOrderId *string, traillingStopLoss *bool) ([]byte, error)
+}
+
+type CTrader struct {
 	wsConn  *websocket.Conn
 	symbols []ctrader.Symbol
 }
 
-// Initalizes new cTrader api.
-func NewCTraderAPI() *CTraderAPI {
-	return &CTraderAPI{}
-}
-
 // Initialize cTrader connection with available symbols.
-func (api *CTraderAPI) InitalizeCTrader() error {
+func (api *CTrader) InitalizeCTrader() error {
 	utils.LogMessage("initializes ctrader connection...")
 
 	if err := api.initializeWsDialer(); err != nil {
@@ -43,7 +46,7 @@ func (api *CTraderAPI) InitalizeCTrader() error {
 }
 
 // Initializes websocket connection.
-func (api *CTraderAPI) initializeWsDialer() error {
+func (api *CTrader) initializeWsDialer() error {
 	utils.LogMessage("initializes ws dialer...")
 
 	var err error
@@ -71,7 +74,7 @@ func (api *CTraderAPI) initializeWsDialer() error {
 }
 
 // Initializes cTrader account.
-func (api *CTraderAPI) authenticate() error {
+func (api *CTrader) authenticate() error {
 	protoOAApplicationAuthReq := ctrader.Message[ctrader.ProtoOAApplicationAuthReq]{
 		ClientMsgID: utils.GetClientMsgID(),
 		PayloadType: configs_helper.TraderConfiguration.PayloadTypes["protooaapplicationauthreq"],
@@ -118,7 +121,7 @@ func (api *CTraderAPI) authenticate() error {
 }
 
 // Saves available symbols to variable in assets.go.
-func (api *CTraderAPI) saveAvailableSymbols() error {
+func (api *CTrader) saveAvailableSymbols() error {
 	utils.LogMessage("getting available symbols...")
 
 	resp, err := api.getAvailableSymbols()
@@ -139,7 +142,7 @@ func (api *CTraderAPI) saveAvailableSymbols() error {
 }
 
 // Sends message to receive available symbols.
-func (api *CTraderAPI) getAvailableSymbols() ([]byte, error) {
+func (api *CTrader) getAvailableSymbols() ([]byte, error) {
 	protoOASymbolsListReq := ctrader.Message[ctrader.ProtoOASymbolsListReq]{
 		ClientMsgID: utils.GetClientMsgID(),
 		PayloadType: configs_helper.TraderConfiguration.PayloadTypes["protooasymbolslistreq"],
@@ -164,7 +167,7 @@ func (api *CTraderAPI) getAvailableSymbols() ([]byte, error) {
 }
 
 // Get trendbars based on given symbol.
-func (api *CTraderAPI) GetTrendbars(symbol, period string) ([]float64, error) {
+func (api *CTrader) GetTrendbars(symbol, period string) ([]float64, error) {
 	utils.LogMessage("getting trendbars...")
 
 	fromTimestamp, toTimestamp := utils.CalculateTimestamps(int(configs_helper.TraderConfiguration.Periods[period].NumberDays))
@@ -196,7 +199,7 @@ func (api *CTraderAPI) GetTrendbars(symbol, period string) ([]float64, error) {
 }
 
 // Sends message to get current trendbars.
-func (api *CTraderAPI) sendMsgTrendbars(fromTimestamp int64, toTimestamp int64, periodId int, symbolId int64, count uint32) ([]byte, error) {
+func (api *CTrader) sendMsgTrendbars(fromTimestamp int64, toTimestamp int64, periodId int, symbolId int64, count uint32) ([]byte, error) {
 	protoOAGetTrendbarsReq := ctrader.Message[ctrader.ProtoOAGetTrendbarsReq]{
 		ClientMsgID: utils.GetClientMsgID(),
 		PayloadType: configs_helper.TraderConfiguration.PayloadTypes["protooagettrendbarsreq"],
@@ -225,7 +228,7 @@ func (api *CTraderAPI) sendMsgTrendbars(fromTimestamp int64, toTimestamp int64, 
 }
 
 // Subscribes spot to get current price.
-func (api *CTraderAPI) SendMsgSubscribeSpot(symbol string) error {
+func (api *CTrader) SendMsgSubscribeSpot(symbol string) error {
 	symbolId, err := utils.FindSymbolId(symbol, api.symbols)
 	if err != nil {
 		return err
@@ -266,7 +269,7 @@ func (api *CTraderAPI) SendMsgSubscribeSpot(symbol string) error {
 }
 
 // Sends message to get current price.
-func (api *CTraderAPI) SendMsgReadMessage() (*ctrader.Message[ctrader.ProtoOASpotEvent], error) {
+func (api *CTrader) SendMsgReadMessage() (*ctrader.Message[ctrader.ProtoOASpotEvent], error) {
 	resp, err := utils.ReadMsg(api.wsConn)
 	if err != nil {
 		return nil, err
@@ -285,7 +288,7 @@ func (api *CTraderAPI) SendMsgReadMessage() (*ctrader.Message[ctrader.ProtoOASpo
 }
 
 // Sends message to create new order.
-func (api *CTraderAPI) SendMsgNewOrder(symbol string, orderType, tradeSide, volume int64, stopLoss, takeProfit *float64, clientOrderId *string, traillingStopLoss *bool) ([]byte, error) {
+func (api *CTrader) SendMsgNewOrder(symbol string, orderType, tradeSide, volume int64, stopLoss, takeProfit *float64, clientOrderId *string, traillingStopLoss *bool) ([]byte, error) {
 	symbolId, err := utils.FindSymbolId(symbol, api.symbols)
 	if err != nil {
 		return nil, err
@@ -322,14 +325,14 @@ func (api *CTraderAPI) SendMsgNewOrder(symbol string, orderType, tradeSide, volu
 	return resp, nil
 }
 
-func NewApi() (*CTraderAPI, error) {
+func NewApi() (CTraderAPI, error) {
 	var err error
 
-	api := NewCTraderAPI()
-	err = api.InitalizeCTrader()
+	CTrader := new(CTrader)
+	err = CTrader.InitalizeCTrader()
 	if err != nil {
 		return nil, err
 	}
 
-	return api, nil
+	return CTrader, nil
 }
