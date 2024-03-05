@@ -97,7 +97,7 @@ type ProtoOANewOrderReq struct {
 	StopPrice           *float64 `json:"stopPrice"`
 	TimeInForce         *int64   `json:"timeInForce"`
 	ExpirationTimestamp *int64   `json:"expirationTimestamp"`
-	StopLoss            *float64 `json:"stopLoss"`
+	StopLoss            float64  `json:"stopLoss"`
 	TakeProfit          *float64 `json:"takeProfit"`
 	Comment             *string  `json:"comment"`
 	BaseSlippagePrice   *float64 `json:"baseSlippagePrice"`
@@ -108,6 +108,21 @@ type ProtoOANewOrderReq struct {
 	RelativeStopLoss    *int64   `json:"relativeStopLoss"`
 	RelativeTakeProfit  *int64   `json:"relativeTakeProfit"`
 	GuaranteedStopLoss  *bool    `json:"guaranteedStopLoss"`
-	TrailingStopLoss    *bool    `json:"trailingStopLoss"`
+	TrailingStopLoss    bool     `json:"trailingStopLoss"`
 	StopTriggerMethod   *int64   `json:"stopTriggerMethod"`
+}
+
+// Get current trader's informations request message.
+type ProtoOATraderReq struct {
+	CtidTraderAccountId int64 `json:"ctidTraderAccountId"`
+}
+
+// Get current trader's informations response message.
+type ProtoOATraderRes struct {
+	CtidTraderAccountId int64         `json:"ctidTraderAccountId"`
+	Trader              ProtoOATrader `json:"trader"`
+}
+
+type ProtoOATrader struct {
+	Balance int64 `json:"balance"`
 }

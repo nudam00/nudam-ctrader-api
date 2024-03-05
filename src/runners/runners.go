@@ -23,16 +23,15 @@ func TradeRoutines(symbolPeriod map[string]string) {
 			if err != nil {
 				log.Panic(err)
 			}
-			apiTrendbars, err := api.NewApi()
+			apiWhatever, err := api.NewApi()
 			if err != nil {
 				log.Panic(err)
 			}
 			defer apiCurrentPrice.Close()
-			defer apiTrendbars.Close()
+			defer apiWhatever.Close()
 
 			time.Sleep(5 * time.Second)
-			err = apiCurrentPrice.SendMsgSubscribeSpot(symbol)
-			if err != nil {
+			if err = apiCurrentPrice.SendMsgSubscribeSpot(symbol); err != nil {
 				log.Panic(err)
 			}
 
@@ -46,39 +45,46 @@ func TradeRoutines(symbolPeriod map[string]string) {
 					}
 				}
 
-				closePrices, err := apiTrendbars.GetTrendbars(symbol, period)
+				closePrices, err := apiWhatever.GetTrendbars(symbol, period)
 				if err != nil {
 					log.Panic(err)
 				}
 
-				resp, resBool := strategy.AreIntervalsTrendMatching(apiTrendbars, symbol, period)
+				resp, resBool := strategy.AreIntervalsTrendMatching(apiWhatever, symbol, period)
 				utils.LogMessage(fmt.Sprintf("%s - %s\n%s", symbol, period, resp))
 
 				if resBool {
-					currentTrend := strategy.GetTrendForPeriod(apiTrendbars, symbol, period)
+					currentTrend := strategy.GetTrendForPeriod(apiWhatever, symbol, period)
 					EMAs := strategy.GetEMAs(closePrices)
 
-					trader := strategy.NewTrader(EMAs)
-					signal := trader.CheckPriceBetweenEma26Ema50(float64(prices.Payload.Bid), float64(prices.Payload.Ask))
+					signal := strategy.CheckPriceBetweenEma26Ema50(float64(prices.Payload.Bid), float64(prices.Payload.Ask), EMAs)
 
-					if currentTrend == strategy.Uptrend && signal == strategy.Short {
+					if currentTrend == strategy.Downtrend && signal == strategy.Short {
+						// balance, err := apiWhatever.SendMsgGetBalance()
+						// if err != nil {
+						// 	log.Panic(err)
+						// }
 						utils.LogMessage("short")
 						break
-					} else if currentTrend == strategy.Downtrend && signal == strategy.Long {
-						utils.LogMessage("long")
+					} else if currentTrend == strategy.Uptrend && signal == strategy.Long {
+						balance, err := apiWhatever.SendMsgGetBalance() //TODO
+						if err != nil {
+							log.Panic(err)
+						}
+						fmt.Println(balance)
+						// stopLossPips, volume := strategy.GetPipsVolume(float64(balance), EMAs, float64(prices.Payload.Ask))
+						// utils.LogMessage(fmt.Sprintf("Opening position:\n%s - %s\n%v", symbol, period, volume))
+						// re, err := apiWhatever.SendMsgNewOrder(symbol, int64(configs_helper.TraderConfiguration.OrderType["market"]), int64(configs_helper.TraderConfiguration.TradeSide["buy"]), volume, stopLossPips)
+						// if err != nil {
+						// 	utils.LogError(err, fmt.Sprintf("cant open position: %s", symbol))
+						// }
+						// utils.LogMessage(string(re))
 						break
 					}
 				}
 
 				time.Sleep(5 * time.Second)
 			}
-			// 	if spotEvent, ok := message.(*ctrader.ProtoOASpotEvent); ok && spotEvent.Symbol == symbol {
-			// 		currentPrice := float64(spotEvent.Ask)
-			// 		trader.UpdatePrice(currentPrice)
-			// 	}
-
-			// re, err := api.SendMsgNewOrder(int64(configs_helper.TraderConfiguration.OrderType["market"]), int64(configs_helper.TraderConfiguration.TradeSide["buy"]), int64(100000))
-			// fmt.Println(string(re))
 		}(symbol, period)
 	}
 	wg.Wait()
@@ -92,8 +98,7 @@ func reconnectApiCurrentPrice(symbol, period string) (api.CTraderAPI, *ctrader.M
 		log.Panic(err)
 	}
 	time.Sleep(5 * time.Second)
-	err = apiCurrentPrice.SendMsgSubscribeSpot(symbol)
-	if err != nil {
+	if err = apiCurrentPrice.SendMsgSubscribeSpot(symbol); err != nil {
 		log.Panic(err)
 	}
 	time.Sleep(5 * time.Second)

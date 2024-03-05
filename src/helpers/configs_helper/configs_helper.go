@@ -44,14 +44,12 @@ func InitializeConfig(path string) error {
 func initializeCTraderConfig() error {
 	viper.SetConfigName("ctrader_demo_config")
 
-	err := viper.ReadInConfig()
-	if err != nil {
+	if err := viper.ReadInConfig(); err != nil {
 		return err
 	}
 
 	CTraderConfig = common.CTraderConfig{}
-	err = viper.UnmarshalKey("ctrader_config", &CTraderConfig)
-	if err != nil {
+	if err := viper.UnmarshalKey("ctrader_config", &CTraderConfig); err != nil {
 		return err
 	}
 
@@ -61,14 +59,12 @@ func initializeCTraderConfig() error {
 func initializeCTraderAccountConfig() error {
 	viper.SetConfigName("ctrader_account_config")
 
-	err := viper.ReadInConfig()
-	if err != nil {
+	if err := viper.ReadInConfig(); err != nil {
 		return err
 	}
 
 	CTraderAccountConfig = common.CTraderAccountConfig{}
-	err = viper.UnmarshalKey("ctrader_account", &CTraderAccountConfig)
-	if err != nil {
+	if err := viper.UnmarshalKey("ctrader_account", &CTraderAccountConfig); err != nil {
 		return err
 	}
 
@@ -78,14 +74,12 @@ func initializeCTraderAccountConfig() error {
 func initializeTraderConfiguration() error {
 	viper.SetConfigName("constants")
 
-	err := viper.ReadInConfig()
-	if err != nil {
+	if err := viper.ReadInConfig(); err != nil {
 		return err
 	}
 
 	TraderConfiguration = common.TraderConfiguration{}
-	err = viper.UnmarshalKey("trader_configuration", &TraderConfiguration)
-	if err != nil {
+	if err := viper.UnmarshalKey("trader_configuration", &TraderConfiguration); err != nil {
 		return err
 	}
 
@@ -95,14 +89,12 @@ func initializeTraderConfiguration() error {
 func initializeStrategy() error {
 	viper.SetConfigName("strategy")
 
-	err := viper.ReadInConfig()
-	if err != nil {
+	if err := viper.ReadInConfig(); err != nil {
 		return err
 	}
 
 	Strategy = common.Strategy{}
-	err = viper.UnmarshalKey("strategy", &Strategy)
-	if err != nil {
+	if err := viper.UnmarshalKey("strategy", &Strategy); err != nil {
 		return err
 	}
 

@@ -13,7 +13,9 @@
       "protooaspotevent": 2131,
       "protooaneworderreq": 2106,
       "protooaexecutionevent": 2126,
-      "protooasubscribespotsres": 2128
+      "protooasubscribespotsres": 2128,
+      "protooatraderreq": 2121,
+      "protooatraderres": 2122
     },
     "periods": {
       "m1": { "value": 1, "countBars": 1440, "numberDays": 1 },

@@ -8,12 +8,11 @@ import (
 
 var (
 	config_path  = "./configs"
-	symbolPeriod = map[string]string{"AUDCHF": "m15"}
+	symbolPeriod = map[string]string{"USDJPY": "m30"}
 )
 
 func main() {
-	err := configs_helper.InitializeConfig(config_path)
-	if err != nil {
+	if err := configs_helper.InitializeConfig(config_path); err != nil {
 		log.Panic(err)
 	}
 
