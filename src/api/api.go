@@ -18,6 +18,7 @@ type CTraderAPI interface {
 	SendMsgSubscribeSpot(symbol string) error
 	SendMsgReadMessage() (*ctrader.Message[ctrader.ProtoOASpotEvent], error)
 	SendMsgNewOrder(symbol string, orderType, tradeSide, volume int64, stopLoss, takeProfit *float64, clientOrderId *string, traillingStopLoss *bool) ([]byte, error)
+	Close() error
 }
 
 type CTrader struct {
@@ -322,6 +323,10 @@ func (api *CTrader) SendMsgNewOrder(symbol string, orderType, tradeSide, volume 
 	}
 
 	return resp, nil
+}
+
+func (api *CTrader) Close() error {
+	return api.wsConn.Close()
 }
 
 func NewApi() (CTraderAPI, error) {

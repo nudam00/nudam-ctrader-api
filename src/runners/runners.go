@@ -5,27 +5,33 @@ import (
 	"log"
 	"nudam-ctrader-api/api"
 	"nudam-ctrader-api/strategy"
+	"nudam-ctrader-api/types/ctrader"
 	"nudam-ctrader-api/utils"
 	"sync"
 	"time"
 )
 
+// Starts trading routines.
 func TradeRoutines(symbolPeriod map[string]string) {
 	var wg sync.WaitGroup
 	for symbol, period := range symbolPeriod {
 		wg.Add(1)
 		go func(symbol, period string) {
 			defer wg.Done()
+
 			apiCurrentPrice, err := api.NewApi()
 			if err != nil {
 				log.Panic(err)
 			}
-			time.Sleep(5 * time.Second)
-			err = apiCurrentPrice.SendMsgSubscribeSpot(symbol)
+			apiTrendbars, err := api.NewApi()
 			if err != nil {
 				log.Panic(err)
 			}
-			apiTrendbars, err := api.NewApi()
+			defer apiCurrentPrice.Close()
+			defer apiTrendbars.Close()
+
+			time.Sleep(5 * time.Second)
+			err = apiCurrentPrice.SendMsgSubscribeSpot(symbol)
 			if err != nil {
 				log.Panic(err)
 			}
@@ -34,21 +40,7 @@ func TradeRoutines(symbolPeriod map[string]string) {
 				prices, err := apiCurrentPrice.SendMsgReadMessage()
 				if err != nil {
 					if err.Error() == "websocket: close 1000 (normal): Bye" {
-						utils.LogMessage(fmt.Sprintf("%s; %s; %s", symbol, period, "attempting to reconnect due to normal WebSocket closure..."))
-						apiCurrentPrice, err := api.NewApi()
-						if err != nil {
-							log.Panic(err)
-						}
-						time.Sleep(5 * time.Second)
-						err = apiCurrentPrice.SendMsgSubscribeSpot(symbol)
-						if err != nil {
-							log.Panic(err)
-						}
-						time.Sleep(5 * time.Second)
-						prices, err = apiCurrentPrice.SendMsgReadMessage()
-						if err != nil {
-							log.Panic(err)
-						}
+						apiCurrentPrice, prices = reconnectApiCurrentPrice(symbol, period)
 					} else {
 						log.Panic(err)
 					}
@@ -59,10 +51,10 @@ func TradeRoutines(symbolPeriod map[string]string) {
 					log.Panic(err)
 				}
 
-				resp, res := strategy.AreIntervalsTrendMatching(apiTrendbars, symbol, period)
+				resp, resBool := strategy.AreIntervalsTrendMatching(apiTrendbars, symbol, period)
 				utils.LogMessage(fmt.Sprintf("%s - %s\n%s", symbol, period, resp))
 
-				if res {
+				if resBool {
 					currentTrend := strategy.GetTrendForPeriod(apiTrendbars, symbol, period)
 					EMAs := strategy.GetEMAs(closePrices)
 
@@ -90,4 +82,25 @@ func TradeRoutines(symbolPeriod map[string]string) {
 		}(symbol, period)
 	}
 	wg.Wait()
+}
+
+// Reconnects connection to subscribe spot.
+func reconnectApiCurrentPrice(symbol, period string) (api.CTraderAPI, *ctrader.Message[ctrader.ProtoOASpotEvent]) {
+	utils.LogMessage(fmt.Sprintf("%s; %s; %s", symbol, period, "attempting to reconnect due to normal WebSocket closure..."))
+	apiCurrentPrice, err := api.NewApi()
+	if err != nil {
+		log.Panic(err)
+	}
+	time.Sleep(5 * time.Second)
+	err = apiCurrentPrice.SendMsgSubscribeSpot(symbol)
+	if err != nil {
+		log.Panic(err)
+	}
+	time.Sleep(5 * time.Second)
+	prices, err := apiCurrentPrice.SendMsgReadMessage()
+	if err != nil {
+		log.Panic(err)
+	}
+
+	return apiCurrentPrice, prices
 }
