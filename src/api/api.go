@@ -14,7 +14,6 @@ import (
 )
 
 type CTraderAPI interface {
-	InitalizeCTrader() error
 	GetTrendbars(symbol, period string) ([]float64, error)
 	SendMsgSubscribeSpot(symbol string) error
 	SendMsgReadMessage() (*ctrader.Message[ctrader.ProtoOASpotEvent], error)
@@ -27,7 +26,7 @@ type CTrader struct {
 }
 
 // Initialize cTrader connection with available symbols.
-func (api *CTrader) InitalizeCTrader() error {
+func (api *CTrader) initalizeCTrader() error {
 	utils.LogMessage("initializes ctrader connection...")
 
 	if err := api.initializeWsDialer(); err != nil {
@@ -329,7 +328,7 @@ func NewApi() (CTraderAPI, error) {
 	var err error
 
 	CTrader := new(CTrader)
-	err = CTrader.InitalizeCTrader()
+	err = CTrader.initalizeCTrader()
 	if err != nil {
 		return nil, err
 	}
