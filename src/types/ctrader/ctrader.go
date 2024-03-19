@@ -28,11 +28,11 @@ type ProtoOASymbolsListReq struct {
 
 // Get available symbols response message.
 type ProtoOASymbolsListRes struct {
-	CtidTraderAccountId int64    `json:"ctidTraderAccountId"`
-	Symbol              []Symbol `json:"symbol"`
+	CtidTraderAccountId int64        `json:"ctidTraderAccountId"`
+	Symbol              []SymbolList `json:"symbol"`
 }
 
-type Symbol struct {
+type SymbolList struct {
 	SymbolId         int64   `json:"symbolId"`
 	SymbolName       string  `json:"symbolName"`
 	Enabled          bool    `json:"enabled"`
@@ -48,7 +48,7 @@ type ProtoOAGetTrendbarsReq struct {
 	CtidTraderAccountId int64  `json:"ctidTraderAccountId"`
 	FromTimestamp       int64  `json:"fromTimestamp"`
 	ToTimestamp         int64  `json:"toTimestamp"`
-	Period              int    `json:"period"`
+	Period              int64  `json:"period"`
 	SymbolId            int64  `json:"symbolId"`
 	Count               uint32 `json:"count"`
 }
@@ -56,7 +56,7 @@ type ProtoOAGetTrendbarsReq struct {
 // Get trendbars response message.
 type ProtoOAGetTrendbarsRes struct {
 	CtidTraderAccountId int64      `json:"ctidTraderAccountId"`
-	Period              int        `json:"period"`
+	Period              int64      `json:"period"`
 	Timestamp           int64      `json:"timestamp"`
 	Trendbar            []Trendbar `json:"trendbar"`
 	SymbolId            int64      `json:"symbolId"`
@@ -64,7 +64,7 @@ type ProtoOAGetTrendbarsRes struct {
 
 type Trendbar struct {
 	Volume                int64  `json:"volume"`
-	Period                int    `json:"period"`
+	Period                int64  `json:"period"`
 	Low                   int64  `json:"low"`
 	DeltaOpen             uint64 `json:"deltaOpen"`
 	DeltaClose            uint64 `json:"deltaClose"`
@@ -75,7 +75,7 @@ type Trendbar struct {
 // Get current price request message.
 type ProtoOASubscribeSpotsReq struct {
 	CtidTraderAccountId int64 `json:"ctidTraderAccountId"`
-	SymbolId            int64 `json:"symbolId"`
+	SymbolId            int64 `json:"symbolId"` // can be list
 }
 
 // Get current price response message.
@@ -97,7 +97,7 @@ type ProtoOANewOrderReq struct {
 	StopPrice           *float64 `json:"stopPrice"`
 	TimeInForce         *int64   `json:"timeInForce"`
 	ExpirationTimestamp *int64   `json:"expirationTimestamp"`
-	StopLoss            float64  `json:"stopLoss"`
+	StopLoss            *float64 `json:"stopLoss"`
 	TakeProfit          *float64 `json:"takeProfit"`
 	Comment             *string  `json:"comment"`
 	BaseSlippagePrice   *float64 `json:"baseSlippagePrice"`
@@ -105,7 +105,7 @@ type ProtoOANewOrderReq struct {
 	Label               *string  `json:"label"`
 	PositionId          *int64   `json:"positionId"`
 	ClientOrderId       *string  `json:"clientOrderId"`
-	RelativeStopLoss    *int64   `json:"relativeStopLoss"`
+	RelativeStopLoss    int64    `json:"relativeStopLoss"`
 	RelativeTakeProfit  *int64   `json:"relativeTakeProfit"`
 	GuaranteedStopLoss  *bool    `json:"guaranteedStopLoss"`
 	TrailingStopLoss    bool     `json:"trailingStopLoss"`
@@ -125,4 +125,23 @@ type ProtoOATraderRes struct {
 
 type ProtoOATrader struct {
 	Balance int64 `json:"balance"`
+}
+
+// Get symbol's entity request message.
+type ProtoOASymbolByIdReq struct {
+	CtidTraderAccountId int64 `json:"ctidTraderAccountId"`
+	SymbolId            int64 `json:"symbolId"`
+}
+
+// Get symbol's entity response message.
+type ProtoOASymbolByIdRes struct {
+	CtidTraderAccountId int64          `json:"ctidTraderAccountId"`
+	Symbol              []SymbolEntity `json:"symbol"`
+}
+
+type SymbolEntity struct {
+	SymbolId    int64 `json:"symbolId"`
+	PipPosition int32 `json:"pipPosition"`
+	StepVolume  int64 `json:"stepVolume"`
+	LotSize     int64 `json:"lotSize"`
 }

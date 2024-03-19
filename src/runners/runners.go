@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"nudam-ctrader-api/api"
+	"nudam-ctrader-api/helpers/configs_helper"
 	"nudam-ctrader-api/strategy"
 	"nudam-ctrader-api/types/ctrader"
 	"nudam-ctrader-api/utils"
@@ -29,6 +30,11 @@ func TradeRoutines(symbolPeriod map[string]string) {
 			}
 			defer apiCurrentPrice.Close()
 			defer apiWhatever.Close()
+
+			symbolEntity, err := apiWhatever.SaveSymbolEntity(symbol)
+			if err != nil {
+				log.Panic(err)
+			}
 
 			time.Sleep(5 * time.Second)
 			if err = apiCurrentPrice.SendMsgSubscribeSpot(symbol); err != nil {
@@ -60,25 +66,35 @@ func TradeRoutines(symbolPeriod map[string]string) {
 					signal := strategy.CheckPriceBetweenEma26Ema50(float64(prices.Payload.Bid), float64(prices.Payload.Ask), EMAs)
 
 					if currentTrend == strategy.Downtrend && signal == strategy.Short {
-						// balance, err := apiWhatever.SendMsgGetBalance()
-						// if err != nil {
-						// 	log.Panic(err)
-						// }
-						utils.LogMessage("short")
-						break
-					} else if currentTrend == strategy.Uptrend && signal == strategy.Long {
-						balance, err := apiWhatever.SendMsgGetBalance() //TODO
+						balance, err := apiWhatever.SendMsgGetBalance()
 						if err != nil {
 							log.Panic(err)
 						}
-						fmt.Println(balance)
-						// stopLossPips, volume := strategy.GetPipsVolume(float64(balance), EMAs, float64(prices.Payload.Ask))
-						// utils.LogMessage(fmt.Sprintf("Opening position:\n%s - %s\n%v", symbol, period, volume))
-						// re, err := apiWhatever.SendMsgNewOrder(symbol, int64(configs_helper.TraderConfiguration.OrderType["market"]), int64(configs_helper.TraderConfiguration.TradeSide["buy"]), volume, stopLossPips)
-						// if err != nil {
-						// 	utils.LogError(err, fmt.Sprintf("cant open position: %s", symbol))
-						// }
-						// utils.LogMessage(string(re))
+						if prices.Payload.Bid != 0 {
+							stopLossPips, volume := strategy.GetStopLossVolume(balance, EMAs, prices.Payload.Bid, symbolEntity)
+							utils.LogMessage(fmt.Sprintf("Opening position:\n%s - %s\n%v", symbol, period, volume))
+							re, err := apiWhatever.SendMsgNewOrder(symbol, int64(configs_helper.TraderConfiguration.OrderType["market"]), int64(configs_helper.TraderConfiguration.TradeSide["sell"]), volume, stopLossPips)
+							if err != nil {
+								utils.LogError(err, fmt.Sprintf("cant open position: %s", symbol))
+							}
+							utils.LogMessage(string(re))
+						}
+						break //read message
+					} else if currentTrend == strategy.Uptrend && signal == strategy.Long {
+						balance, err := apiWhatever.SendMsgGetBalance()
+						if err != nil {
+							log.Panic(err)
+						}
+						if prices.Payload.Ask != 0 {
+							stopLossPips, volume := strategy.GetStopLossVolume(balance, EMAs, prices.Payload.Ask, symbolEntity)
+							utils.LogMessage(fmt.Sprintf("Opening position:\n%s - %s\n%v", symbol, period, volume))
+							re, err := apiWhatever.SendMsgNewOrder(symbol, int64(configs_helper.TraderConfiguration.OrderType["market"]), int64(configs_helper.TraderConfiguration.TradeSide["buy"]), volume, stopLossPips)
+							if err != nil {
+								utils.LogError(err, fmt.Sprintf("cant open position: %s", symbol))
+							}
+							utils.LogMessage(string(re))
+						}
+
 						break
 					}
 				}

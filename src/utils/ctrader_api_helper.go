@@ -52,8 +52,12 @@ func ReadMsg(wsConn *websocket.Conn) ([]byte, error) {
 
 // Checks response from message.
 func CheckResponse(resp []byte, expected int, err error) error {
+	var errMsg string
+	if err != nil {
+		errMsg = err.Error()
+	}
 	if !strings.Contains(string(resp), strconv.Itoa(expected)) {
-		err := fmt.Errorf("error receiving response from %s; error: %s", strconv.Itoa(expected), err.Error())
+		err := fmt.Errorf("error receiving response from %s; error: %s", strconv.Itoa(expected), errMsg)
 		LogError(err, string(resp))
 		return err
 	}
@@ -61,7 +65,7 @@ func CheckResponse(resp []byte, expected int, err error) error {
 }
 
 // Finds symbol id based on given name.
-func FindSymbolId(symbolName string, symbols []ctrader.Symbol) (int64, error) {
+func FindSymbolId(symbolName string, symbols []ctrader.SymbolList) (int64, error) {
 	for _, symbol := range symbols {
 		if symbol.SymbolName == symbolName {
 			return symbol.SymbolId, nil

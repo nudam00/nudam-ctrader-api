@@ -15,7 +15,9 @@
       "protooaexecutionevent": 2126,
       "protooasubscribespotsres": 2128,
       "protooatraderreq": 2121,
-      "protooatraderres": 2122
+      "protooatraderres": 2122,
+      "protooasymbolbyddreq": 2116,
+      "protooasymbolbyddres": 2117
     },
     "periods": {
       "m1": { "value": 1, "countBars": 1440, "numberDays": 1 },
@@ -57,6 +59,9 @@
       "opposite": 2,
       "double_trade": 3,
       "double_opposite": 4
+    },
+    "pips": {
+      "eurusd": { "pips": 10, "price": 100000, "lotUnit": 100000 }
     }
   }
 }
