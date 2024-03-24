@@ -45,12 +45,12 @@ type SymbolList struct {
 
 // Get trendbars request message.
 type ProtoOAGetTrendbarsReq struct {
-	CtidTraderAccountId int64   `json:"ctidTraderAccountId"`
-	FromTimestamp       *int64  `json:"fromTimestamp"`
-	ToTimestamp         *int64  `json:"toTimestamp"`
-	Period              *int64  `json:"period"`
-	SymbolId            *int64  `json:"symbolId"`
-	Count               *uint32 `json:"count"`
+	CtidTraderAccountId int64  `json:"ctidTraderAccountId"`
+	FromTimestamp       int64  `json:"fromTimestamp"`
+	ToTimestamp         int64  `json:"toTimestamp"`
+	Period              int64  `json:"period"`
+	SymbolId            int64  `json:"symbolId"`
+	Count               uint32 `json:"count"`
 }
 
 // Get trendbars response message.
@@ -59,7 +59,7 @@ type ProtoOAGetTrendbarsRes struct {
 	Period              int64      `json:"period"`
 	Timestamp           *int64     `json:"timestamp"`
 	Trendbar            []Trendbar `json:"trendbar"`
-	SymbolId            *int64     `json:"symbolId"`
+	SymbolId            int64      `json:"symbolId"`
 }
 
 type Trendbar struct {

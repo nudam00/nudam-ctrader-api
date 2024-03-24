@@ -17,7 +17,8 @@
       "protooatraderreq": 2121,
       "protooatraderres": 2122,
       "protooasymbolbyddreq": 2116,
-      "protooasymbolbyddres": 2117
+      "protooasymbolbyddres": 2117,
+      "hearbeatevent": 51
     },
     "periods": {
       "m1": { "value": 1, "countBars": 1440, "numberDays": 1 },
@@ -27,9 +28,7 @@
       "h1": { "value": 9, "countBars": 24, "numberDays": 14 },
       "h4": { "value": 10, "countBars": 6, "numberDays": 49 },
       "h12": { "value": 11, "countBars": 2, "numberDays": 147 },
-      "d1": { "value": 12, "countBars": 1, "numberDays": 287 },
-      "w1": { "value": 13, "countBars": 0.14, "numberDays": 1407 },
-      "mn1": { "value": 14, "countBars": 0.03, "numberDays": 6167 }
+      "d1": { "value": 12, "countBars": 1, "numberDays": 287 }
     },
     "quoteType": {
       "bid": 1,

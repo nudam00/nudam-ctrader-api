@@ -61,7 +61,7 @@ func SaveToMongo(doc interface{}, payloadType int) error {
 	if result.UpsertedID != nil {
 		logger.LogMessage(fmt.Sprintf("new doc added: %v", result.UpsertedID))
 	} else {
-		logger.LogMessage("doc updated")
+		logger.LogMessage(fmt.Sprintf("doc updated: %v", payloadType))
 	}
 
 	return nil

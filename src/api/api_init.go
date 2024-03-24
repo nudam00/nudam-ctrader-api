@@ -16,7 +16,7 @@ import (
 )
 
 // Initialize cTrader connection with available symbols.
-func (api *CTrader) initalizeCTrader() error {
+func (api *CTrader) Open() error {
 	logger.LogMessage("initializes ctrader connection...")
 
 	if err := api.initializeWsDialer(); err != nil {
@@ -42,10 +42,8 @@ func (api *CTrader) initalizeCTrader() error {
 	return nil
 }
 
-// Initializes websocket connection.
+// Initialize websocket connection.
 func (api *CTrader) initializeWsDialer() error {
-	logger.LogMessage("initializes ws dialer...")
-
 	var err error
 	var resp *http.Response
 	wsDialer := &websocket.Dialer{}
@@ -66,7 +64,7 @@ func (api *CTrader) initializeWsDialer() error {
 	return nil
 }
 
-// Initializes cTrader account.
+// Initialize cTrader account.
 func (api *CTrader) authenticate() error {
 	protoOAApplicationAuthReq := ctrader.Message[ctrader.ProtoOAApplicationAuthReq]{
 		ClientMsgID: utils.GetClientMsgID(),
@@ -84,7 +82,7 @@ func (api *CTrader) authenticate() error {
 	if err != nil {
 		return err
 	}
-	if err = utils.CheckResponse(resp, configs_helper.TraderConfiguration.PayloadTypes["protooaapplicationauthres"], err); err != nil {
+	if err = utils.CheckResponseContains(resp, configs_helper.TraderConfiguration.PayloadTypes["protooaapplicationauthres"], err); err != nil {
 		return err
 	}
 
@@ -104,7 +102,7 @@ func (api *CTrader) authenticate() error {
 	if err != nil {
 		return err
 	}
-	if err = utils.CheckResponse(resp, configs_helper.TraderConfiguration.PayloadTypes["protooaaccountauthres"], err); err != nil {
+	if err = utils.CheckResponseContains(resp, configs_helper.TraderConfiguration.PayloadTypes["protooaaccountauthres"], err); err != nil {
 		return err
 	}
 
@@ -113,7 +111,7 @@ func (api *CTrader) authenticate() error {
 	return nil
 }
 
-// Saves available symbols to MongoDb.
+// Save available symbols to MongoDb.
 func (api *CTrader) saveAvailableSymbols() error {
 	logger.LogMessage("getting available symbols...")
 
@@ -133,7 +131,7 @@ func (api *CTrader) saveAvailableSymbols() error {
 	if err != nil {
 		return err
 	}
-	if err = utils.CheckResponse(resp, configs_helper.TraderConfiguration.PayloadTypes["protooasymbolslistres"], err); err != nil {
+	if err = utils.CheckResponseContains(resp, configs_helper.TraderConfiguration.PayloadTypes["protooasymbolslistres"], err); err != nil {
 		return err
 	}
 
@@ -151,7 +149,7 @@ func (api *CTrader) saveAvailableSymbols() error {
 	return nil
 }
 
-// Save symbols entity.
+// Save symbol entities.
 func (api *CTrader) saveSymbolEntity() error {
 	symbolIds, err := mongodb.FindSymbolIds(configs_helper.TraderConfiguration.CurrencyPairs, configs_helper.TraderConfiguration.PayloadTypes["protooasymbolslistres"])
 	if err != nil {
@@ -174,7 +172,7 @@ func (api *CTrader) saveSymbolEntity() error {
 	if err != nil {
 		return err
 	}
-	if err = utils.CheckResponse(resp, configs_helper.TraderConfiguration.PayloadTypes["protooasymbolbyddres"], err); err != nil {
+	if err = utils.CheckResponseContains(resp, configs_helper.TraderConfiguration.PayloadTypes["protooasymbolbyddres"], err); err != nil {
 		return err
 	}
 
@@ -187,12 +185,12 @@ func (api *CTrader) saveSymbolEntity() error {
 		return err
 	}
 
-	logger.LogMessage("available symbols saved successfully...")
+	logger.LogMessage("available symbol entities saved successfully...")
 
 	return nil
 }
 
-// Subscribes spots to get current price.
+// Subscribe spots to get current price.
 func (api *CTrader) sendMsgSubscribeSpot() error {
 	symbolIds, err := mongodb.FindSymbolIds(configs_helper.TraderConfiguration.CurrencyPairs, configs_helper.TraderConfiguration.PayloadTypes["protooasymbolslistres"])
 	if err != nil {

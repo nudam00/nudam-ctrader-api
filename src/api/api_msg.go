@@ -3,44 +3,27 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"nudam-ctrader-api/external/mongodb"
 	"nudam-ctrader-api/helpers/configs_helper"
 	"nudam-ctrader-api/logger"
 	"nudam-ctrader-api/types/ctrader"
+	"nudam-ctrader-api/utils"
 )
 
 // Get trendbars based on given symbol.
 func (api *CTrader) GetTrendbars(symbol string) error {
-	logger.LogMessage("getting trendbars...")
+	logger.LogMessage(fmt.Sprintf("getting trendbars: %s", symbol))
 
-	fromTimestamp, toTimestamp := utils.CalculateTimestamps(int(configs_helper.TraderConfiguration.Periods["mn1"].NumberDays))
-	periodId := configs_helper.TraderConfiguration.Periods[period].Value
-	symbolId, err := utils.FindSymbolId(symbol, api.symbolList)
+	fromTimestamp, toTimestamp := utils.CalculateTimestamps(int(configs_helper.TraderConfiguration.Periods["d1"].NumberDays)) // then it will get the biggest possible amount of data
+	periodId := configs_helper.TraderConfiguration.Periods["d1"].Value
+
+	symbols := []string{symbol}
+	symbolIds, err := mongodb.FindSymbolIds(symbols, configs_helper.TraderConfiguration.PayloadTypes["protooasymbolslistres"])
 	if err != nil {
-		return nil, err
+		return err
 	}
-	count := utils.CalculateCountBars(period)
+	count := utils.CalculateCountBars("d1")
 
-	resp, err := api.sendMsgTrendbars(fromTimestamp, toTimestamp, periodId, symbolId, count)
-	if err != nil {
-		return nil, err
-	}
-
-	var protoOAGetTrendbarsRes ctrader.Message[ctrader.ProtoOAGetTrendbarsRes]
-	if err = json.Unmarshal(resp, &protoOAGetTrendbarsRes); err != nil {
-		return nil, err
-	}
-
-	var closePrices []float64
-	for _, bar := range protoOAGetTrendbarsRes.Payload.Trendbar {
-		closePrice := bar.Low + int64(bar.DeltaClose)
-		closePrices = append(closePrices, float64(closePrice))
-	}
-
-	return closePrices, nil
-}
-
-// Sends message to get current trendbars.
-func (api *CTrader) sendMsgTrendbars(fromTimestamp, toTimestamp, periodId, symbolId int64, count uint32) ([]byte, error) {
 	protoOAGetTrendbarsReq := ctrader.Message[ctrader.ProtoOAGetTrendbarsReq]{
 		ClientMsgID: utils.GetClientMsgID(),
 		PayloadType: configs_helper.TraderConfiguration.PayloadTypes["protooagettrendbarsreq"],
@@ -49,50 +32,21 @@ func (api *CTrader) sendMsgTrendbars(fromTimestamp, toTimestamp, periodId, symbo
 			FromTimestamp:       fromTimestamp,
 			ToTimestamp:         toTimestamp,
 			Period:              periodId,
-			SymbolId:            symbolId,
+			SymbolId:            symbolIds[0],
 			Count:               count,
 		},
 	}
 
-	if err := utils.SendMsg(api.ws, protoOAGetTrendbarsReq); err != nil {
-		return nil, err
-	}
-	resp, err := utils.ReadMsg(api.ws)
+	reqBytes, err := json.Marshal(protoOAGetTrendbarsReq)
 	if err != nil {
-		return nil, err
+		return err
 	}
+	api.sendMessage(reqBytes)
 
-	fmt.Println(string(resp))
-	resp, err = utils.ReadMsg(api.ws)
-	if err != nil {
-		return nil, err
-	}
-	fmt.Println(string(resp))
+	logger.LogMessage(fmt.Sprintf("trendbars received successfully: %s", symbol))
 
-	if err = utils.CheckResponse(resp, configs_helper.TraderConfiguration.PayloadTypes["protooagettrendbarsres"], err); err != nil {
-		return nil, err
-	}
-
-	return resp, nil
+	return nil
 }
-
-// Sends message to get current price.
-// func (api *CTrader) SendMsgReadMessage() (*ctrader.Message[ctrader.ProtoOASpotEvent], error) {
-// 	resp, err := utils.ReadMsg(api.ws)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	if err = utils.CheckResponse(resp, configs_helper.TraderConfiguration.PayloadTypes["protooaspotevent"], err); err != nil {
-// 		return nil, err
-// 	}
-
-// 	var protoOASpotEvent *ctrader.Message[ctrader.ProtoOASpotEvent]
-// 	if err = json.Unmarshal(resp, &protoOASpotEvent); err != nil {
-// 		return nil, err
-// 	}
-
-// 	return protoOASpotEvent, nil
-// }
 
 // // Sends message to create new order.
 // func (api *CTrader) SendMsgNewOrder(symbol string, orderType, tradeSide, volume, stopLoss int64) ([]byte, error) {

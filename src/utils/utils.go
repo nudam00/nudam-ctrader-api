@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"nudam-ctrader-api/helpers/configs_helper"
 	"nudam-ctrader-api/logger"
 	"strconv"
 	"strings"
@@ -35,8 +36,8 @@ func ReadMsg(wsConn *websocket.Conn) ([]byte, error) {
 	return resp, nil
 }
 
-// Checks response from message.
-func CheckResponse(resp []byte, expected int, err error) error {
+// Checks whether response contains specific payload id in a message.
+func CheckResponseContains(resp []byte, expected int, err error) error {
 	if !strings.Contains(string(resp), strconv.Itoa(expected)) {
 		err := fmt.Errorf("error receiving response from %s; error: %s", strconv.Itoa(expected), err.Error())
 		logger.LogError(err, string(resp))
@@ -54,7 +55,7 @@ func CalculateTimestamps(numberDays int) (int64, int64) {
 	return fromTimestamp, toTimestamp
 }
 
-// // Calculates the amount of bars based on given period.
-// func CalculateCountBars(period string) uint32 {
-// 	return configs_helper.TraderConfiguration.Periods[period].CountBars * configs_helper.TraderConfiguration.Periods[period].NumberDays
-// }
+// Calculates the amount of bars based on given period.
+func CalculateCountBars(period string) uint32 {
+	return configs_helper.TraderConfiguration.Periods[period].CountBars * configs_helper.TraderConfiguration.Periods[period].NumberDays
+}

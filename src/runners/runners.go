@@ -1,41 +1,50 @@
 package runners
 
 import (
+	"fmt"
 	"log"
 	"nudam-ctrader-api/api"
+	"nudam-ctrader-api/helpers/configs_helper"
+	"nudam-ctrader-api/logger"
 	"sync"
+	"time"
 )
 
 // Starts trading routines.
-func TradeRoutines(symbolPeriod map[string]string) {
+func TradeRoutines() {
 	var wg sync.WaitGroup
-	for symbol, period := range symbolPeriod {
-		wg.Add(1)
-		go func(symbol, period string) {
-			defer wg.Done()
+	api := api.NewApi()
+	err := api.Open()
+	if err != nil {
+		log.Panic(err)
+	}
+	defer api.Close()
 
-			// apiCurrentPrice, err := api.NewApi()
-			// if err != nil {
-			// 	log.Panic(err)
-			// }
-			apiWhatever, err := api.NewApi()
-			if err != nil {
+	go func() {
+		for {
+			if err := api.ReadMessage(); err != nil {
+				logger.LogError(err, "error reading message")
 				log.Panic(err)
 			}
-			// defer apiCurrentPrice.Close()
-			defer apiWhatever.Close()
+		}
+	}()
 
-			// symbolEntity, err := apiWhatever.SaveSymbolEntity(symbol)
-			// if err != nil {
-			// 	log.Panic(err)
-			// }
+	for _, symbol := range configs_helper.TraderConfiguration.CurrencyPairs {
+		wg.Add(1)
+		go func(symbol string) {
+			defer wg.Done()
+			ticker := time.NewTicker(30 * time.Second)
+			defer ticker.Stop()
 
-			// time.Sleep(5 * time.Second)
-			// if err = apiWhatever.SendMsgSubscribeSpot(symbol); err != nil {
-			// 	log.Panic(err)
-			// }
+			for range ticker.C {
+				if err = api.GetTrendbars(symbol); err != nil {
+					logger.LogError(err, fmt.Sprintf("error getting trendbars for %s", symbol))
+					log.Panic(err)
+				}
+			}
 
 			// for {
+
 			// 	prices, err := apiWhatever.SendMsgReadMessage()
 			// 	if err != nil {
 			// 		if err.Error() == "websocket: close 1000 (normal): Bye" {
@@ -43,11 +52,6 @@ func TradeRoutines(symbolPeriod map[string]string) {
 			// 		} else {
 			// 			log.Panic(err)
 			// 		}
-			// 	}
-
-			// 	closePrices, err := apiWhatever.GetTrendbars(symbol, period)
-			// 	if err != nil {
-			// 		log.Panic(err)
 			// 	}
 
 			// 	resp, resBool := strategy.AreIntervalsTrendMatching(apiWhatever, symbol, period)
@@ -93,9 +97,8 @@ func TradeRoutines(symbolPeriod map[string]string) {
 			// 		}
 			// 	}
 
-			// 	time.Sleep(5 * time.Second)
 			// }
-		}(symbol, period)
+		}(symbol)
 	}
 	wg.Wait()
 }
