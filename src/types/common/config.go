@@ -12,6 +12,12 @@ type CTraderAccountConfig struct {
 	AccessToken         string `json:"accessToken"`
 }
 
+type MongoDb struct {
+	Uri            string `json:"uri"`
+	CollectionName string `json:"collectionName"`
+	DatabaseName   string `json:"databaseName"`
+}
+
 type TraderConfiguration struct {
 	PayloadTypes      map[string]int      `json:"payloadTypes"`
 	Periods           map[string]Period   `json:"periods"`
@@ -21,6 +27,7 @@ type TraderConfiguration struct {
 	TimeInForce       map[string]int64    `json:"timeInForce"`
 	StopTriggerMethod map[string]int64    `json:"stopTriggerMethod"`
 	Pips              map[string]Dividers `json:"pips"`
+	CurrencyPairs     []string            `json:"currencyPairs"`
 }
 
 type Period struct {

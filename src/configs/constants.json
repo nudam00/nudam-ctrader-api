@@ -62,6 +62,14 @@
     },
     "pips": {
       "eurusd": { "pips": 10, "price": 100000, "lotUnit": 100000 }
-    }
+    },
+    "currencyPairs": [
+      "EURUSD",
+      "USDJPY",
+      "GBPUSD",
+      "AUDUSD",
+      "USDCHF",
+      "USDCAD"
+    ]
   }
 }

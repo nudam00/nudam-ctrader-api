@@ -8,7 +8,7 @@ import (
 
 var (
 	config_path  = "./configs"
-	symbolPeriod = map[string]string{"AUDUSD": "m15", "GBPUSD": "m15"}
+	symbolPeriod = map[string]string{"AUDUSD": "m15"}
 )
 
 func main() {
