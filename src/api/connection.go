@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"nudam-ctrader-api/external/mongodb"
@@ -13,6 +14,7 @@ import (
 	"nudam-ctrader-api/utils"
 
 	"github.com/gorilla/websocket"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 // Initialize cTrader connection with available symbols.
@@ -113,8 +115,6 @@ func (api *CTrader) authenticate() error {
 
 // Save available symbols to MongoDb.
 func (api *CTrader) saveAvailableSymbols() error {
-	logger.LogMessage("getting available symbols...")
-
 	protoOASymbolsListReq := ctrader.Message[ctrader.ProtoOASymbolsListReq]{
 		ClientMsgID: utils.GetClientMsgID(),
 		PayloadType: configs_helper.TraderConfiguration.PayloadTypes["protooasymbolslistreq"],
@@ -140,8 +140,19 @@ func (api *CTrader) saveAvailableSymbols() error {
 		return err
 	}
 
-	if err = mongodb.SaveToMongo(protoOASymbolsListRes, configs_helper.TraderConfiguration.PayloadTypes["protooasymbolslistres"]); err != nil {
-		return err
+	for _, symbol := range protoOASymbolsListRes.Payload.Symbol {
+		symbolData := mongodb.MongoDbData{
+			SymbolId:    symbol.SymbolId,
+			SymbolName:  *symbol.SymbolName,
+			PipPosition: 0,
+			StepVolume:  0,
+			LotSize:     0,
+			Prices:      mongodb.PriceData{},
+			ClosePrices: nil,
+		}
+		if err = mongodb.SaveToMongo(symbolData, bson.M{"symbolId": symbol.SymbolId}); err != nil {
+			return err
+		}
 	}
 
 	logger.LogMessage("available symbols saved successfully...")
@@ -149,11 +160,15 @@ func (api *CTrader) saveAvailableSymbols() error {
 	return nil
 }
 
-// Save symbol entities.
+// Save symbol entity.
 func (api *CTrader) saveSymbolEntity() error {
-	symbolIds, err := mongodb.FindSymbolIds(configs_helper.TraderConfiguration.CurrencyPairs, configs_helper.TraderConfiguration.PayloadTypes["protooasymbolslistres"])
-	if err != nil {
-		return err
+	var symbolIds []int64
+	for _, symbolName := range configs_helper.TraderConfiguration.CurrencyPairs {
+		symbolId, err := mongodb.FindSymbolId(symbolName)
+		if err != nil {
+			return err
+		}
+		symbolIds = append(symbolIds, symbolId)
 	}
 
 	protoOASymbolByIdReq := ctrader.Message[ctrader.ProtoOASymbolByIdReq]{
@@ -181,20 +196,33 @@ func (api *CTrader) saveSymbolEntity() error {
 		return err
 	}
 
-	if err = mongodb.SaveToMongo(protoOASymbolByIdRes, configs_helper.TraderConfiguration.PayloadTypes["protooasymbolbyddres"]); err != nil {
-		return err
+	for _, symbol := range protoOASymbolByIdRes.Payload.Symbol {
+		update := bson.M{
+			"$set": bson.M{
+				"pipPosition": symbol.PipPosition,
+				"stepVolume":  symbol.StepVolume,
+				"lotSize":     symbol.LotSize,
+			},
+		}
+		if err = mongodb.UpdateMongo(bson.M{"symbolId": symbol.SymbolId}, update); err != nil {
+			return err
+		}
 	}
 
-	logger.LogMessage("available symbol entities saved successfully...")
+	logger.LogMessage("available symbol entity saved successfully...")
 
 	return nil
 }
 
 // Subscribe spots to get current price.
 func (api *CTrader) sendMsgSubscribeSpot() error {
-	symbolIds, err := mongodb.FindSymbolIds(configs_helper.TraderConfiguration.CurrencyPairs, configs_helper.TraderConfiguration.PayloadTypes["protooasymbolslistres"])
-	if err != nil {
-		return err
+	var symbolIds []int64
+	for _, symbolName := range configs_helper.TraderConfiguration.CurrencyPairs {
+		symbolId, err := mongodb.FindSymbolId(symbolName)
+		if err != nil {
+			return err
+		}
+		symbolIds = append(symbolIds, symbolId)
 	}
 
 	protoOASubscribeSpotsReq := ctrader.Message[ctrader.ProtoOASubscribeSpotsReq]{
@@ -209,10 +237,31 @@ func (api *CTrader) sendMsgSubscribeSpot() error {
 	if err := utils.SendMsg(api.ws, protoOASubscribeSpotsReq); err != nil {
 		return err
 	}
-	_, err = utils.ReadMsg(api.ws)
+	_, err := utils.ReadMsg(api.ws)
 	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+// Close websocket connection.
+func (api *CTrader) Close() error {
+	return api.ws.Close()
+}
+
+// Write mesages from chan.
+func (api *CTrader) writePump() {
+	for message := range api.sendChannel {
+		if err := api.ws.WriteMessage(websocket.TextMessage, message); err != nil {
+			logger.LogError(err, "error sending message")
+			log.Panic(err)
+			return
+		}
+	}
+}
+
+// Update chan.
+func (api *CTrader) sendMessage(message []byte) {
+	api.sendChannel <- message
 }

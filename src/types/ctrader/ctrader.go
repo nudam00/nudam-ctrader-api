@@ -28,19 +28,19 @@ type ProtoOASymbolsListReq struct {
 
 // Get available symbols response message.
 type ProtoOASymbolsListRes struct {
-	CtidTraderAccountId int64        `bson:"ctidTraderAccountId" json:"ctidTraderAccountId"`
-	Symbol              []SymbolList `bson:"symbol" json:"symbol"`
+	CtidTraderAccountId int64        `json:"ctidTraderAccountId"`
+	Symbol              []SymbolList `json:"symbol"`
 }
 
 type SymbolList struct {
-	SymbolId         int64    `bson:"symbolId" json:"symbolId"`
-	SymbolName       *string  `bson:"symbolName" json:"symbolName"`
-	Enabled          *bool    `bson:"enabled" json:"enabled"`
-	BaseAssetId      *int64   `bson:"baseAssetId" json:"baseAssetId"`
-	QuoteAssetId     *int64   `bson:"quoteAssetId" json:"quoteAssetId"`
-	SymbolCategoryId *int64   `bson:"symbolCategoryId" json:"symbolCategoryId"`
-	Description      *string  `bson:"description" json:"description"`
-	SortingNumber    *float64 `bson:"sortingNumber" json:"sortingNumber"`
+	SymbolId         int64    `json:"symbolId"`
+	SymbolName       *string  `json:"symbolName"`
+	Enabled          *bool    `json:"enabled"`
+	BaseAssetId      *int64   `json:"baseAssetId"`
+	QuoteAssetId     *int64   `json:"quoteAssetId"`
+	SymbolCategoryId *int64   `json:"symbolCategoryId"`
+	Description      *string  `json:"description"`
+	SortingNumber    *float64 `json:"sortingNumber"`
 }
 
 // Get trendbars request message.
@@ -60,14 +60,15 @@ type ProtoOAGetTrendbarsRes struct {
 	Timestamp           *int64     `json:"timestamp"`
 	Trendbar            []Trendbar `json:"trendbar"`
 	SymbolId            int64      `json:"symbolId"`
+	ClosePrices         []float64  `json:"closePrices"`
 }
 
 type Trendbar struct {
 	Volume                int64   `json:"volume"`
 	Period                *int64  `json:"period"`
-	Low                   *int64  `json:"low"`
+	Low                   int64   `json:"low"`
 	DeltaOpen             *uint64 `json:"deltaOpen"`
-	DeltaClose            *uint64 `json:"deltaClose"`
+	DeltaClose            uint64  `json:"deltaClose"`
 	DeltaHigh             *uint64 `json:"deltaHigh"`
 	UTCTimestampInMinutes *uint32 `json:"utcTimestampInMinutes"`
 }

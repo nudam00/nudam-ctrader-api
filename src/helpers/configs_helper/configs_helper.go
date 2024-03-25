@@ -12,7 +12,7 @@ var (
 	CTraderAccountConfig common.CTraderAccountConfig
 	TraderConfiguration  common.TraderConfiguration
 	Strategy             common.Strategy
-	MongoDb              common.MongoDb
+	MongoDbConfig        common.MongoDbConfig
 )
 
 // Initializes cTrader config with basic variables.
@@ -55,8 +55,8 @@ func initializeCTraderConfig() error {
 		return err
 	}
 
-	MongoDb = common.MongoDb{}
-	if err := viper.UnmarshalKey("mongodb", &MongoDb); err != nil {
+	MongoDbConfig = common.MongoDbConfig{}
+	if err := viper.UnmarshalKey("mongodb", &MongoDbConfig); err != nil {
 		return err
 	}
 

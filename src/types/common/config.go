@@ -12,10 +12,10 @@ type CTraderAccountConfig struct {
 	AccessToken         string `json:"accessToken"`
 }
 
-type MongoDb struct {
-	Uri            string `json:"uri"`
-	CollectionName string `json:"collectionName"`
-	DatabaseName   string `json:"databaseName"`
+type MongoDbConfig struct {
+	Uri          string `json:"uri"`
+	DatabaseName string `json:"databaseName"`
+	Collection   string `json:"collection"`
 }
 
 type TraderConfiguration struct {

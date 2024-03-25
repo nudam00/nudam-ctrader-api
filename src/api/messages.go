@@ -2,23 +2,18 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"nudam-ctrader-api/external/mongodb"
 	"nudam-ctrader-api/helpers/configs_helper"
-	"nudam-ctrader-api/logger"
 	"nudam-ctrader-api/types/ctrader"
 	"nudam-ctrader-api/utils"
 )
 
 // Get trendbars based on given symbol.
 func (api *CTrader) GetTrendbars(symbol string) error {
-	logger.LogMessage(fmt.Sprintf("getting trendbars: %s", symbol))
-
 	fromTimestamp, toTimestamp := utils.CalculateTimestamps(int(configs_helper.TraderConfiguration.Periods["d1"].NumberDays)) // then it will get the biggest possible amount of data
 	periodId := configs_helper.TraderConfiguration.Periods["d1"].Value
 
-	symbols := []string{symbol}
-	symbolIds, err := mongodb.FindSymbolIds(symbols, configs_helper.TraderConfiguration.PayloadTypes["protooasymbolslistres"])
+	symbolId, err := mongodb.FindSymbolId(symbol)
 	if err != nil {
 		return err
 	}
@@ -32,7 +27,7 @@ func (api *CTrader) GetTrendbars(symbol string) error {
 			FromTimestamp:       fromTimestamp,
 			ToTimestamp:         toTimestamp,
 			Period:              periodId,
-			SymbolId:            symbolIds[0],
+			SymbolId:            symbolId,
 			Count:               count,
 		},
 	}
@@ -42,8 +37,6 @@ func (api *CTrader) GetTrendbars(symbol string) error {
 		return err
 	}
 	api.sendMessage(reqBytes)
-
-	logger.LogMessage(fmt.Sprintf("trendbars received successfully: %s", symbol))
 
 	return nil
 }

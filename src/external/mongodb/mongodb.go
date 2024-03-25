@@ -2,10 +2,8 @@ package mongodb
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"nudam-ctrader-api/helpers/configs_helper"
-	"nudam-ctrader-api/logger"
 	"nudam-ctrader-api/types/ctrader"
 	"sync"
 
@@ -20,11 +18,26 @@ var (
 	mongoClientOnce sync.Once
 )
 
+type MongoDbData struct {
+	SymbolId    int64     `bson:"symbolId" json:"symbolId"`
+	SymbolName  string    `bson:"symbolName" json:"symbolName"`
+	PipPosition int32     `bson:"pipPosition" json:"pipPosition"`
+	StepVolume  int64     `bson:"stepVolume" json:"stepVolume"`
+	LotSize     int64     `bson:"lotSize" json:"lotSize"`
+	Prices      PriceData `bson:"prices" json:"prices"`
+	ClosePrices []float64 `bson:"closePrices" json:"closePrices"`
+}
+
+type PriceData struct {
+	Bid uint64 `bson:"bid" json:"bid"`
+	Ask uint64 `bson:"ask" json:"ask"`
+}
+
 func GetMongoClient() (*mongo.Client, context.Context, error) {
 	var err error
 	mongoClientOnce.Do(func() {
 		serverAPI := options.ServerAPI(options.ServerAPIVersion1)
-		clientOptions := options.Client().ApplyURI(configs_helper.MongoDb.Uri).SetServerAPIOptions(serverAPI)
+		clientOptions := options.Client().ApplyURI(configs_helper.MongoDbConfig.Uri).SetServerAPIOptions(serverAPI)
 		mongoClientCtx := context.TODO()
 		mongoClient, err = mongo.Connect(mongoClientCtx, clientOptions)
 		if err != nil {
@@ -42,60 +55,54 @@ func GetMongoClient() (*mongo.Client, context.Context, error) {
 }
 
 // Saves interface to MongoDb based on collection in configs.
-func SaveToMongo(doc interface{}, payloadType int) error {
+func SaveToMongo(doc interface{}, filter bson.M) error {
 	client, ctx, err := GetMongoClient()
 	if err != nil {
 		return err
 	}
 
-	coll := client.Database(configs_helper.MongoDb.DatabaseName).Collection(configs_helper.MongoDb.CollectionName)
+	coll := client.Database(configs_helper.MongoDbConfig.DatabaseName).Collection(configs_helper.MongoDbConfig.Collection)
 
-	filter := bson.M{"payloadtype": payloadType}
 	opts := options.Replace().SetUpsert(true)
-
-	result, err := coll.ReplaceOne(ctx, filter, doc, opts)
+	_, err = coll.ReplaceOne(ctx, filter, doc, opts)
 	if err != nil {
 		return err
 	}
 
-	if result.UpsertedID != nil {
-		logger.LogMessage(fmt.Sprintf("new doc added: %v", result.UpsertedID))
-	} else {
-		logger.LogMessage(fmt.Sprintf("doc updated: %v", payloadType))
+	return nil
+}
+
+// Updates doc in MongoDb based on collection in configs.
+func UpdateMongo(filter, update bson.M) error {
+	client, ctx, err := GetMongoClient()
+	if err != nil {
+		return err
+	}
+
+	coll := client.Database(configs_helper.MongoDbConfig.DatabaseName).Collection(configs_helper.MongoDbConfig.Collection)
+
+	opts := options.Update().SetUpsert(true)
+	_, err = coll.UpdateOne(ctx, filter, update, opts)
+	if err != nil {
+		return err
 	}
 
 	return nil
 }
 
 // Takes symbolIds from mongodb based on currency pairs in constants.json.
-func FindSymbolIds(symbolNames []string, payloadType int) ([]int64, error) {
+func FindSymbolId(symbolName string) (int64, error) {
 	client, ctx, err := GetMongoClient()
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
 
-	coll := client.Database(configs_helper.MongoDb.DatabaseName).Collection(configs_helper.MongoDb.CollectionName)
-	filter := bson.M{"payloadtype": payloadType}
+	coll := client.Database(configs_helper.MongoDbConfig.DatabaseName).Collection(configs_helper.MongoDbConfig.Collection)
 
-	var result ctrader.Message[ctrader.ProtoOASymbolsListRes]
-	if err = coll.FindOne(ctx, filter).Decode(&result); err != nil {
-		return nil, err
+	var result ctrader.SymbolList
+	if err = coll.FindOne(ctx, bson.M{"symbolName": symbolName}).Decode(&result); err != nil {
+		return 0, err
 	}
 
-	symbolIds := make([]int64, 0, len(symbolNames))
-	for _, symbolName := range symbolNames {
-		found := false
-		for _, symbol := range result.Payload.Symbol {
-			if *symbol.SymbolName == symbolName {
-				symbolIds = append(symbolIds, symbol.SymbolId)
-				found = true
-				break
-			}
-		}
-		if !found {
-			return nil, err
-		}
-	}
-
-	return symbolIds, nil
+	return result.SymbolId, nil
 }
