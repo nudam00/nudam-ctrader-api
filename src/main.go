@@ -7,8 +7,7 @@ import (
 )
 
 var (
-	config_path  = "./configs"
-	symbolPeriod = map[string]string{"USDJPY": "m30"}
+	config_path = "./configs"
 )
 
 func main() {
@@ -16,5 +15,5 @@ func main() {
 		log.Panic(err)
 	}
 
-	runners.TradeRoutines(symbolPeriod)
+	runners.TradeRoutines()
 }
