@@ -37,9 +37,9 @@ type Period struct {
 }
 
 type Strategy struct {
-	Ema      []int   `json:"ema"`
-	Risk     float64 `json:"risk"`
-	Leverage int64   `json:"leverage"`
+	Ema      []float64 `json:"ema"`
+	Risk     float64   `json:"risk"`
+	Leverage int64     `json:"leverage"`
 }
 
 type Dividers struct {

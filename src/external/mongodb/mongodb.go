@@ -25,12 +25,17 @@ type MongoDbData struct {
 	StepVolume  int64     `bson:"stepVolume" json:"stepVolume"`
 	LotSize     int64     `bson:"lotSize" json:"lotSize"`
 	Prices      PriceData `bson:"prices" json:"prices"`
-	ClosePrices []float64 `bson:"closePrices" json:"closePrices"`
+	Ema         []Ema     `bson:"ema" json:"ema"`
 }
 
 type PriceData struct {
 	Bid uint64 `bson:"bid" json:"bid"`
 	Ask uint64 `bson:"ask" json:"ask"`
+}
+
+type Ema struct {
+	Period int64            `bson:"period" json:"period"`
+	Values map[string]int64 `bson:"values" json:"values"`
 }
 
 func GetMongoClient() (*mongo.Client, context.Context, error) {

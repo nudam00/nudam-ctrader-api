@@ -9,15 +9,15 @@ import (
 )
 
 // Get trendbars based on given symbol.
-func (api *CTrader) GetTrendbars(symbol string) error {
-	fromTimestamp, toTimestamp := utils.CalculateTimestamps(int(configs_helper.TraderConfiguration.Periods["d1"].NumberDays)) // then it will get the biggest possible amount of data
-	periodId := configs_helper.TraderConfiguration.Periods["d1"].Value
+func (api *CTrader) GetTrendbars(symbol, period string) error {
+	fromTimestamp, toTimestamp := utils.CalculateTimestamps(int(configs_helper.TraderConfiguration.Periods[period].NumberDays)) // then it will get the biggest possible amount of data
+	periodId := configs_helper.TraderConfiguration.Periods[period].Value
 
 	symbolId, err := mongodb.FindSymbolId(symbol)
 	if err != nil {
 		return err
 	}
-	count := utils.CalculateCountBars("d1")
+	count := utils.CalculateCountBars(period)
 
 	protoOAGetTrendbarsReq := ctrader.Message[ctrader.ProtoOAGetTrendbarsReq]{
 		ClientMsgID: utils.GetClientMsgID(),

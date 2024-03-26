@@ -60,7 +60,6 @@ type ProtoOAGetTrendbarsRes struct {
 	Timestamp           *int64     `json:"timestamp"`
 	Trendbar            []Trendbar `json:"trendbar"`
 	SymbolId            int64      `json:"symbolId"`
-	ClosePrices         []float64  `json:"closePrices"`
 }
 
 type Trendbar struct {

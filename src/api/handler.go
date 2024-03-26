@@ -6,6 +6,7 @@ import (
 	"nudam-ctrader-api/external/mongodb"
 	"nudam-ctrader-api/helpers/configs_helper"
 	"nudam-ctrader-api/logger"
+	"nudam-ctrader-api/strategy"
 	"nudam-ctrader-api/types/ctrader"
 	"nudam-ctrader-api/utils"
 
@@ -67,7 +68,7 @@ func saveProtoOASpotEvent(baseMsg ctrader.Message[json.RawMessage]) error {
 		}
 	}
 
-	logger.LogMessage(fmt.Sprintf("bid and ask received for: %v", protoOASpotEvent.SymbolId))
+	logger.LogMessage(fmt.Sprintf("bid and ask received for: symbol %v", protoOASpotEvent.SymbolId))
 
 	return nil
 }
@@ -78,21 +79,29 @@ func saveProtoOAGetTrendbarsRes(baseMsg ctrader.Message[json.RawMessage]) error 
 	if err := json.Unmarshal(baseMsg.Payload, &protoOAGetTrendbarsRes); err != nil {
 		return err
 	}
+
+	var closePrices []float64
 	for _, bar := range protoOAGetTrendbarsRes.Trendbar {
-		closePrice := bar.Low + int64(bar.DeltaClose)
-		protoOAGetTrendbarsRes.ClosePrices = append(protoOAGetTrendbarsRes.ClosePrices, float64(closePrice))
+		closePrice := float64(bar.Low + int64(bar.DeltaClose))
+		closePrices = append(closePrices, closePrice)
 	}
 
-	protoOAGetTrendbarsRes.Trendbar = nil
+	emas := strategy.GetEMAs(closePrices)
 
-	filter := bson.M{"symbolId": protoOAGetTrendbarsRes.SymbolId}
-	update := bson.M{"$set": bson.M{"closePrices": protoOAGetTrendbarsRes.ClosePrices}}
+	filter := bson.M{"symbolId": protoOAGetTrendbarsRes.SymbolId, "ema": bson.M{
+		"$elemMatch": bson.M{"period": protoOAGetTrendbarsRes.Period},
+	}}
+	update := bson.M{
+		"$set": bson.M{
+			"ema.$.values": emas,
+		},
+	}
 
 	if err := mongodb.UpdateMongo(filter, update); err != nil {
 		return err
 	}
 
-	logger.LogMessage(fmt.Sprintf("close prices received for: %v", protoOAGetTrendbarsRes.SymbolId))
+	logger.LogMessage(fmt.Sprintf("ema received for: symbol %v and period %v", protoOAGetTrendbarsRes.SymbolId, protoOAGetTrendbarsRes.Period))
 
 	return nil
 }

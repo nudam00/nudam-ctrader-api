@@ -5,7 +5,7 @@ import (
 )
 
 type CTraderAPI interface {
-	GetTrendbars(symbol string) error
+	GetTrendbars(symbol, period string) error
 	ReadMessage() error
 	// SendMsgNewOrder(symbol string, orderType, tradeSide, volume, stopLoss int64) ([]byte, error)
 	// SendMsgGetBalance() (float64, error)
