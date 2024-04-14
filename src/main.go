@@ -14,6 +14,5 @@ func main() {
 	if err := configs_helper.InitializeConfig(config_path); err != nil {
 		log.Panic(err)
 	}
-
 	runners.TradeRoutines()
 }

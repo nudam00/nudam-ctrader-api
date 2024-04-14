@@ -38,6 +38,7 @@ type Ema struct {
 	Values map[string]int64 `bson:"values" json:"values"`
 }
 
+// Return mongodb client.
 func GetMongoClient() (*mongo.Client, context.Context, error) {
 	var err error
 	mongoClientOnce.Do(func() {
@@ -59,7 +60,7 @@ func GetMongoClient() (*mongo.Client, context.Context, error) {
 	return mongoClient, mongoClientCtx, err
 }
 
-// Saves interface to MongoDb based on collection in configs.
+// Save interface to MongoDb based on collection in configs.
 func SaveToMongo(doc interface{}, filter bson.M) error {
 	client, ctx, err := GetMongoClient()
 	if err != nil {
@@ -77,7 +78,7 @@ func SaveToMongo(doc interface{}, filter bson.M) error {
 	return nil
 }
 
-// Updates doc in MongoDb based on collection in configs.
+// Update doc in MongoDb based on collection in configs and with specific filter and update bson.M.
 func UpdateMongo(filter, update bson.M) error {
 	client, ctx, err := GetMongoClient()
 	if err != nil {
@@ -95,7 +96,7 @@ func UpdateMongo(filter, update bson.M) error {
 	return nil
 }
 
-// Takes symbolIds from mongodb based on currency pairs in constants.json.
+// Take symbolId from mongodb based on symbolName.
 func FindSymbolId(symbolName string) (int64, error) {
 	client, ctx, err := GetMongoClient()
 	if err != nil {
@@ -110,4 +111,21 @@ func FindSymbolId(symbolName string) (int64, error) {
 	}
 
 	return result.SymbolId, nil
+}
+
+// Take emas from mongodb based on symbolName.
+func FindEmas(symbolName string) ([]Ema, error) {
+	client, ctx, err := GetMongoClient()
+	if err != nil {
+		return nil, err
+	}
+
+	coll := client.Database(configs_helper.MongoDbConfig.DatabaseName).Collection(configs_helper.MongoDbConfig.Collection)
+
+	var result MongoDbData
+	if err = coll.FindOne(ctx, bson.M{"symbolName": symbolName}).Decode(&result); err != nil {
+		return nil, err
+	}
+
+	return result.Ema, nil
 }

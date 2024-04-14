@@ -112,12 +112,12 @@ type ProtoOANewOrderReq struct {
 	StopTriggerMethod   *int64   `json:"stopTriggerMethod"`
 }
 
-// Get current trader's informations request message.
+// Get current trader's information request message.
 type ProtoOATraderReq struct {
 	CtidTraderAccountId int64 `json:"ctidTraderAccountId"`
 }
 
-// Get current trader's informations response message.
+// Get current trader's information response message.
 type ProtoOATraderRes struct {
 	CtidTraderAccountId int64         `json:"ctidTraderAccountId"`
 	Trader              ProtoOATrader `json:"trader"`

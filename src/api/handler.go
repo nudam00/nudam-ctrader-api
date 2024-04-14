@@ -45,7 +45,6 @@ func (api *CTrader) ReadMessage() error {
 	}
 
 	return nil
-
 }
 
 // Update bid and ask in mongodb.
@@ -67,8 +66,6 @@ func saveProtoOASpotEvent(baseMsg ctrader.Message[json.RawMessage]) error {
 			return err
 		}
 	}
-
-	logger.LogMessage(fmt.Sprintf("bid and ask received for: symbol %v", protoOASpotEvent.SymbolId))
 
 	return nil
 }
@@ -100,8 +97,6 @@ func saveProtoOAGetTrendbarsRes(baseMsg ctrader.Message[json.RawMessage]) error 
 	if err := mongodb.UpdateMongo(filter, update); err != nil {
 		return err
 	}
-
-	logger.LogMessage(fmt.Sprintf("ema received for: symbol %v and period %v", protoOAGetTrendbarsRes.SymbolId, protoOAGetTrendbarsRes.Period))
 
 	return nil
 }

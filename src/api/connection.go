@@ -245,10 +245,6 @@ func (api *CTrader) sendMsgSubscribeSpot() error {
 	if err := utils.SendMsg(api.ws, protoOASubscribeSpotsReq); err != nil {
 		return err
 	}
-	_, err := utils.ReadMsg(api.ws)
-	if err != nil {
-		return err
-	}
 
 	return nil
 }

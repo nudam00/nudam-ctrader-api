@@ -12,12 +12,12 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-// Generates uuid message id.
+// Generate uuid message id.
 func GetClientMsgID() string {
 	return uuid.New().String()
 }
 
-// Sends message to api with body.
+// Send message to websocket with body.
 func SendMsg(wsConn *websocket.Conn, msg interface{}) error {
 	if err := wsConn.WriteJSON(msg); err != nil {
 		logger.LogError(err, fmt.Sprintln(msg))
@@ -26,7 +26,7 @@ func SendMsg(wsConn *websocket.Conn, msg interface{}) error {
 	return nil
 }
 
-// Reads message response.
+// Read message response.
 func ReadMsg(wsConn *websocket.Conn) ([]byte, error) {
 	_, resp, err := wsConn.ReadMessage()
 	if err != nil {
@@ -36,7 +36,7 @@ func ReadMsg(wsConn *websocket.Conn) ([]byte, error) {
 	return resp, nil
 }
 
-// Checks whether response contains specific payload id in a message.
+// Check whether response contains specific payload id in a message.
 func CheckResponseContains(resp []byte, expected int, err error) error {
 	if !strings.Contains(string(resp), strconv.Itoa(expected)) {
 		err := fmt.Errorf("error receiving response from %s; error: %s", strconv.Itoa(expected), err.Error())
@@ -46,7 +46,7 @@ func CheckResponseContains(resp []byte, expected int, err error) error {
 	return nil
 }
 
-// Calculates fromTimestamp and toTimestamp.
+// Calculate fromTimestamp and toTimestamp.
 func CalculateTimestamps(numberDays int) (int64, int64) {
 	now := time.Now()
 	fromTime := now.AddDate(0, 0, -numberDays)
@@ -55,7 +55,7 @@ func CalculateTimestamps(numberDays int) (int64, int64) {
 	return fromTimestamp, toTimestamp
 }
 
-// Calculates the amount of bars based on given period.
+// Calculate the amount of bars based on given period.
 func CalculateCountBars(period string) uint32 {
 	return configs_helper.TraderConfiguration.Periods[period].CountBars * configs_helper.TraderConfiguration.Periods[period].NumberDays
 }
