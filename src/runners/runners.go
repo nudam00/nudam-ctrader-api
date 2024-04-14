@@ -13,7 +13,6 @@ import (
 
 // Start trading routines.
 func TradeRoutines() {
-	var wg sync.WaitGroup
 	api := api.NewApi()
 	err := api.Open()
 	if err != nil {
@@ -21,31 +20,41 @@ func TradeRoutines() {
 	}
 	defer api.Close()
 
-	go func() {
-		for {
-			if err := api.ReadMessage(); err != nil {
-				logger.LogError(err, "error reading message")
+	go RunnerReadMessage(api)
+
+	go RunnerCheckStrategy()
+
+	RunnerGetTrendbars(api)
+}
+
+// Func to start goroutine message reader.
+func RunnerReadMessage(api api.CTraderAPI) {
+	for {
+		if err := api.ReadMessage(); err != nil {
+			logger.LogError(err, "error reading message")
+		}
+	}
+}
+
+// Func to start goroutine strategy checker.
+func RunnerCheckStrategy() {
+	ticker := time.NewTicker(10 * time.Second)
+	defer ticker.Stop()
+
+	for range ticker.C {
+		for _, symbol := range configs_helper.TraderConfiguration.CurrencyPairs {
+			err := strategy.PeriodsTrendMatching(symbol)
+			if err != nil {
+				logger.LogError(err, "error getting emas from mongodb")
 				log.Panic(err)
 			}
 		}
-	}()
+	}
+}
 
-	go func() {
-		ticker := time.NewTicker(10 * time.Second)
-		defer ticker.Stop()
-
-		for range ticker.C {
-			for _, symbol := range configs_helper.TraderConfiguration.CurrencyPairs {
-				err := strategy.PeriodsTrendMatching(symbol)
-				if err != nil {
-					logger.LogError(err, "error getting emas from mongodb")
-					log.Panic(err)
-				}
-			}
-
-		}
-	}()
-
+// Func to start trendbars goroutines.
+func RunnerGetTrendbars(api api.CTraderAPI) {
+	var wg sync.WaitGroup
 	for _, symbol := range configs_helper.TraderConfiguration.CurrencyPairs {
 		for period := range configs_helper.TraderConfiguration.Periods {
 			wg.Add(1)
@@ -54,7 +63,7 @@ func TradeRoutines() {
 				defer ticker.Stop()
 
 				for range ticker.C {
-					if err = api.GetTrendbars(symbol, period); err != nil {
+					if err := api.GetTrendbars(symbol, period); err != nil {
 						logger.LogError(err, fmt.Sprintf("error getting trendbars for %s", symbol))
 						log.Panic(err)
 					}

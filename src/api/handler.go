@@ -83,7 +83,10 @@ func saveProtoOAGetTrendbarsRes(baseMsg ctrader.Message[json.RawMessage]) error 
 		closePrices = append(closePrices, closePrice)
 	}
 
-	emas := strategy.GetEMAs(closePrices)
+	emas, err := strategy.GetEMAs(closePrices)
+	if err != nil {
+		return fmt.Errorf("%v for period %d and symbolId %d", err, protoOAGetTrendbarsRes.Period, protoOAGetTrendbarsRes.SymbolId)
+	}
 
 	filter := bson.M{"symbolId": protoOAGetTrendbarsRes.SymbolId, "ema": bson.M{
 		"$elemMatch": bson.M{"period": protoOAGetTrendbarsRes.Period},
