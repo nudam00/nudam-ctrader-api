@@ -1,92 +1,41 @@
 package runners
 
 import (
-	"fmt"
 	"log"
 	"nudam-ctrader-api/api"
-	"nudam-ctrader-api/helpers/configs_helper"
-	"nudam-ctrader-api/logger"
-	"nudam-ctrader-api/strategy"
-	"sync"
-	"time"
 )
 
-// Start trading routines.
-func TradeRoutines() {
-	api := api.NewApi()
-	err := api.Open()
+type IRunner interface {
+	StartRoutines()
+}
+
+type Runner struct {
+	api     api.CTraderAPI
+	handler IHandler
+}
+
+func NewRunner() *Runner {
+	return &Runner{
+		api: api.NewApi(),
+	}
+}
+
+// Start trading goroutines.
+func (r *Runner) StartRoutines() {
+	err := r.api.Open()
 	if err != nil {
 		log.Panic(err)
 	}
-	defer api.Close()
+	defer r.api.Close()
 
-	go RunnerReadMessage(api)
+	r.handler = NewHandler()
 
-	go RunnerCheckStrategy()
+	go r.handler.HandlerReadMessage(r.api)
 
-	RunnerGetTrendbars(api)
+	go r.handler.HandlerStrategy()
+
+	r.handler.HandlerGetTrendbars(r.api)
 }
-
-// Func to start goroutine message reader.
-func RunnerReadMessage(api api.CTraderAPI) {
-	for {
-		if err := api.ReadMessage(); err != nil {
-			logger.LogError(err, "error reading message")
-		}
-	}
-}
-
-// Func to start goroutine strategy checker.
-func RunnerCheckStrategy() {
-	ticker := time.NewTicker(10 * time.Second)
-	defer ticker.Stop()
-
-	for range ticker.C {
-		for _, symbol := range configs_helper.TraderConfiguration.CurrencyPairs {
-			signal, err := strategy.SignalChecker(symbol)
-			if err != nil {
-				logger.LogError(err, "error getting data from mongodb")
-				log.Panic(err)
-			}
-
-			if signal == strategy.Short {
-
-			} else if signal == strategy.Long {
-
-			}
-		}
-	}
-}
-
-// Func to start trendbars goroutines.
-func RunnerGetTrendbars(api api.CTraderAPI) {
-	var wg sync.WaitGroup
-	for _, symbol := range configs_helper.TraderConfiguration.CurrencyPairs {
-		for period := range configs_helper.TraderConfiguration.Periods {
-			wg.Add(1)
-			go func(symbol, period string) {
-				ticker := time.NewTicker(30 * time.Second)
-				defer ticker.Stop()
-
-				for range ticker.C {
-					if err := api.GetTrendbars(symbol, period); err != nil {
-						logger.LogError(err, fmt.Sprintf("error getting trendbars for %s", symbol))
-						log.Panic(err)
-					}
-				}
-			}(symbol, period)
-		}
-	}
-	wg.Wait()
-}
-
-// utils.LogMessage(fmt.Sprintf("%s - %s\n%s", symbol, period, resp))
-
-// 	if resBool {
-// 		currentTrend := strategy.GetTrendForPeriod(apiWhatever, symbol, period)
-// 		EMAs := strategy.GetEMAs(closePrices)
-
-// 		signal := strategy.CheckPriceBetweenEma26Ema50(float64(prices.Payload.Bid), float64(prices.Payload.Ask), EMAs)
 
 // 		if currentTrend == strategy.Downtrend && signal == strategy.Short {
 // 			balance, err := apiWhatever.SendMsgGetBalance()
