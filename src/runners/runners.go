@@ -43,10 +43,16 @@ func RunnerCheckStrategy() {
 
 	for range ticker.C {
 		for _, symbol := range configs_helper.TraderConfiguration.CurrencyPairs {
-			err := strategy.PeriodsTrendMatching(symbol)
+			signal, err := strategy.SignalChecker(symbol)
 			if err != nil {
-				logger.LogError(err, "error getting emas from mongodb")
+				logger.LogError(err, "error getting data from mongodb")
 				log.Panic(err)
+			}
+
+			if signal == strategy.Short {
+
+			} else if signal == strategy.Long {
+
 			}
 		}
 	}

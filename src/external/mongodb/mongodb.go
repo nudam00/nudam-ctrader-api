@@ -129,3 +129,20 @@ func FindEmas(symbolName string) ([]Ema, error) {
 
 	return result.Ema, nil
 }
+
+// Take bid and ask price based on symbolName.
+func FindBidAsk(symbolName string) (PriceData, error) {
+	client, ctx, err := GetMongoClient()
+	if err != nil {
+		return PriceData{}, err
+	}
+
+	coll := client.Database(configs_helper.MongoDbConfig.DatabaseName).Collection(configs_helper.MongoDbConfig.Collection)
+
+	var result MongoDbData
+	if err = coll.FindOne(ctx, bson.M{"symbolName": symbolName}).Decode(&result); err != nil {
+		return PriceData{}, err
+	}
+
+	return result.Prices, nil
+}
