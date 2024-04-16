@@ -63,18 +63,7 @@ func (h *Handler) HandlerStrategy() {
 func (h *Handler) openPosition(symbol string, signal strategy.Signal) {
 	h.api.SendMsgGetBalance()
 	h.api.SetOnBalanceUpdate(func(balance int64) {
-		// if balance > 100000 { // Załóżmy, że 100000 to próg balansu
-		// 	// Logika otwierania pozycji
-		// 	symbol := "EURUSD"    // Przykład symbolu
-		// 	volume := int64(1000) // Przykład wolumenu
-		// 	orderType := 1        // Przykład typu zlecenia, np. zlecenie rynkowe
-		// 	tradeSide := 1        // Przykład strony handlowej, np. kupno (1) lub sprzedaż (2)
 
-		// 	fmt.Printf("Attempting to open a new position for %s with volume %d\n", symbol, volume)
-		// 	if err := api.SendMsgNewOrder(symbol, orderType, tradeSide, volume, 0); err != nil {
-		// 		fmt.Println("Error opening new position:", err)
-		// 	}
-		// }
 	})
 }
 
