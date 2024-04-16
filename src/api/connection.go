@@ -158,7 +158,15 @@ func (api *CTrader) saveAvailableSymbols() error {
 			Prices:      mongodb.PriceData{},
 			Ema:         emas,
 		}
-		if err = mongodb.SaveToMongo(symbolData, bson.M{"symbolId": symbol.SymbolId}); err != nil {
+		docMap := make(bson.M)
+		data, err := bson.Marshal(symbolData)
+		if err != nil {
+			return err
+		}
+		bson.Unmarshal(data, &docMap)
+		delete(docMap, "position")
+
+		if err = mongodb.SaveToMongo(docMap, bson.M{"symbolId": symbol.SymbolId}); err != nil {
 			return err
 		}
 	}

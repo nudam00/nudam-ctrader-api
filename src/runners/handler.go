@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"nudam-ctrader-api/api"
+	"nudam-ctrader-api/external/mongodb"
 	"nudam-ctrader-api/helpers/configs_helper"
 	"nudam-ctrader-api/logger"
 	"nudam-ctrader-api/strategy"
@@ -12,19 +13,18 @@ import (
 )
 
 type IHandler interface {
-	HandlerReadMessage(api api.CTraderAPI)
+	HandlerReadMessage()
 	HandlerStrategy()
-	HandlerGetTrendbars(api api.CTraderAPI)
+	HandlerGetTrendbars()
 }
 
 type Handler struct {
-	positions map[string]bool
-	mu        sync.Mutex
+	api api.CTraderAPI
 }
 
-func NewHandler() IHandler {
+func NewHandler(api api.CTraderAPI) IHandler {
 	handler := new(Handler)
-	handler.positions = make(map[string]bool)
+	handler.api = api
 	return handler
 }
 
@@ -35,32 +35,60 @@ func (h *Handler) HandlerStrategy() {
 
 	for range ticker.C {
 		for _, symbol := range configs_helper.TraderConfiguration.CurrencyPairs {
+			position, err := mongodb.FindPosition(symbol)
+			if err != nil {
+				logger.LogError(err, "error getting data from mongodb")
+				log.Panic(err)
+			}
+			if position {
+				continue
+			}
+
 			signal, err := strategy.SignalChecker(symbol)
 			if err != nil {
 				logger.LogError(err, "error getting data from mongodb")
 				log.Panic(err)
 			}
 
-			if signal == strategy.Short {
-
-			} else if signal == strategy.Long {
-
+			switch signal {
+			case strategy.Short, strategy.Long:
+				h.openPosition(symbol, signal)
+			default:
+				continue
 			}
 		}
 	}
 }
 
+func (h *Handler) openPosition(symbol string, signal strategy.Signal) {
+	h.api.SendMsgGetBalance()
+	h.api.SetOnBalanceUpdate(func(balance int64) {
+		// if balance > 100000 { // Załóżmy, że 100000 to próg balansu
+		// 	// Logika otwierania pozycji
+		// 	symbol := "EURUSD"    // Przykład symbolu
+		// 	volume := int64(1000) // Przykład wolumenu
+		// 	orderType := 1        // Przykład typu zlecenia, np. zlecenie rynkowe
+		// 	tradeSide := 1        // Przykład strony handlowej, np. kupno (1) lub sprzedaż (2)
+
+		// 	fmt.Printf("Attempting to open a new position for %s with volume %d\n", symbol, volume)
+		// 	if err := api.SendMsgNewOrder(symbol, orderType, tradeSide, volume, 0); err != nil {
+		// 		fmt.Println("Error opening new position:", err)
+		// 	}
+		// }
+	})
+}
+
 // Func to start goroutine message reader.
-func (h *Handler) HandlerReadMessage(api api.CTraderAPI) {
+func (h *Handler) HandlerReadMessage() {
 	for {
-		if err := api.ReadMessage(); err != nil {
+		if err := h.api.ReadMessage(); err != nil {
 			logger.LogError(err, "error reading message")
 		}
 	}
 }
 
 // Func to start goroutine trendbar receiver.
-func (h *Handler) HandlerGetTrendbars(api api.CTraderAPI) {
+func (h *Handler) HandlerGetTrendbars() {
 	var wg sync.WaitGroup
 	for _, symbol := range configs_helper.TraderConfiguration.CurrencyPairs {
 		for period := range configs_helper.TraderConfiguration.Periods {
@@ -70,7 +98,7 @@ func (h *Handler) HandlerGetTrendbars(api api.CTraderAPI) {
 				defer ticker.Stop()
 
 				for range ticker.C {
-					if err := api.GetTrendbars(symbol, period); err != nil {
+					if err := h.api.GetTrendbars(symbol, period); err != nil {
 						logger.LogError(err, fmt.Sprintf("error getting trendbars for %s", symbol))
 						log.Panic(err)
 					}
@@ -81,21 +109,38 @@ func (h *Handler) HandlerGetTrendbars(api api.CTraderAPI) {
 	wg.Wait()
 }
 
-func (h *Handler) isPositionOpen(symbol string) bool {
-	h.mu.Lock()
-	defer h.mu.Unlock()
-	open, exists := h.positions[symbol]
-	return exists && open
-}
+// func (h *Handler) closePosition(symbol string) {
+// 	h.mu.Lock()
+// 	defer h.mu.Unlock()
+// 	h.positions[symbol] = false
+// }
 
-func (h *Handler) openPosition(symbol string) {
-	h.mu.Lock()
-	defer h.mu.Unlock()
-	h.positions[symbol] = true
-}
-
-func (h *Handler) closePosition(symbol string) {
-	h.mu.Lock()
-	defer h.mu.Unlock()
-	h.positions[symbol] = false
-}
+// 		if currentTrend == strategy.Downtrend && signal == strategy.Short {
+// 			balance, err := apiWhatever.SendMsgGetBalance()
+// 			if err != nil {
+// 				log.Panic(err)
+// 			}
+// 			if prices.Payload.Bid != 0 {
+// 				stopLossPips, volume := strategy.GetStopLossVolume(balance, EMAs, prices.Payload.Bid, symbolEntity)
+// 				utils.LogMessage(fmt.Sprintf("Opening position:\n%s - %s\n%v", symbol, period, volume))
+// 				re, err := apiWhatever.SendMsgNewOrder(symbol, int64(configs_helper.TraderConfiguration.OrderType["market"]), int64(configs_helper.TraderConfiguration.TradeSide["sell"]), volume, stopLossPips)
+// 				if err != nil {
+// 					utils.LogError(err, fmt.Sprintf("cant open position: %s", symbol))
+// 				}
+// 				utils.LogMessage(string(re))
+// 			}
+// 			break //read message
+// 		} else if currentTrend == strategy.Uptrend && signal == strategy.Long {
+// 			balance, err := apiWhatever.SendMsgGetBalance()
+// 			if err != nil {
+// 				log.Panic(err)
+// 			}
+// 			if prices.Payload.Ask != 0 {
+// 				stopLossPips, volume := strategy.GetStopLossVolume(balance, EMAs, prices.Payload.Ask, symbolEntity)
+// 				utils.LogMessage(fmt.Sprintf("Opening position:\n%s - %s\n%v", symbol, period, volume))
+// 				re, err := apiWhatever.SendMsgNewOrder(symbol, int64(configs_helper.TraderConfiguration.OrderType["market"]), int64(configs_helper.TraderConfiguration.TradeSide["buy"]), volume, stopLossPips)
+// 				if err != nil {
+// 					utils.LogError(err, fmt.Sprintf("cant open position: %s", symbol))
+// 				}
+// 				utils.LogMessage(string(re))
+// 			}

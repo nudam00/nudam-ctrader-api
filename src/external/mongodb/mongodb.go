@@ -26,6 +26,7 @@ type MongoDbData struct {
 	LotSize     int64     `bson:"lotSize" json:"lotSize"`
 	Prices      PriceData `bson:"prices" json:"prices"`
 	Ema         []Ema     `bson:"ema" json:"ema"`
+	Position    bool      `bson:"position" json:"position"`
 }
 
 type PriceData struct {
@@ -61,7 +62,7 @@ func GetMongoClient() (*mongo.Client, context.Context, error) {
 }
 
 // Save interface to MongoDb based on collection in configs.
-func SaveToMongo(doc interface{}, filter bson.M) error {
+func SaveToMongo(doc bson.M, filter bson.M) error {
 	client, ctx, err := GetMongoClient()
 	if err != nil {
 		return err
@@ -69,8 +70,11 @@ func SaveToMongo(doc interface{}, filter bson.M) error {
 
 	coll := client.Database(configs_helper.MongoDbConfig.DatabaseName).Collection(configs_helper.MongoDbConfig.Collection)
 
-	opts := options.Replace().SetUpsert(true)
-	_, err = coll.ReplaceOne(ctx, filter, doc, opts)
+	update := bson.M{
+		"$set": doc,
+	}
+	opts := options.Update().SetUpsert(true)
+	_, err = coll.UpdateOne(ctx, filter, update, opts)
 	if err != nil {
 		return err
 	}
@@ -145,4 +149,21 @@ func FindBidAsk(symbolName string) (PriceData, error) {
 	}
 
 	return result.Prices, nil
+}
+
+// Take position based on symbolName.
+func FindPosition(symbolName string) (bool, error) {
+	client, ctx, err := GetMongoClient()
+	if err != nil {
+		return false, err
+	}
+
+	coll := client.Database(configs_helper.MongoDbConfig.DatabaseName).Collection(configs_helper.MongoDbConfig.Collection)
+
+	var result MongoDbData
+	if err = coll.FindOne(ctx, bson.M{"symbolName": symbolName}).Decode(&result); err != nil {
+		return false, err
+	}
+
+	return result.Position, nil
 }

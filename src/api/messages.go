@@ -41,6 +41,25 @@ func (api *CTrader) GetTrendbars(symbol, period string) error {
 	return nil
 }
 
+// Get current balance.
+func (api *CTrader) SendMsgGetBalance() error {
+	protoOATraderReq := ctrader.Message[ctrader.ProtoOATraderReq]{
+		ClientMsgID: utils.GetClientMsgID(),
+		PayloadType: configs_helper.TraderConfiguration.PayloadTypes["protooatraderreq"],
+		Payload: ctrader.ProtoOATraderReq{
+			CtidTraderAccountId: configs_helper.CTraderAccountConfig.CtidTraderAccountId,
+		},
+	}
+
+	reqBytes, err := json.Marshal(protoOATraderReq)
+	if err != nil {
+		return err
+	}
+	api.sendMessage(reqBytes)
+
+	return nil
+}
+
 // // Sends message to create new order.
 // func (api *CTrader) SendMsgNewOrder(symbol string, orderType, tradeSide, volume, stopLoss int64) ([]byte, error) {
 // 	symbolId, err := utils.FindSymbolId(symbol, api.symbolList)
@@ -75,34 +94,4 @@ func (api *CTrader) GetTrendbars(symbol, period string) error {
 // 	}
 
 // 	return resp, nil
-// }
-
-// // Gets current balance.
-// func (api *CTrader) SendMsgGetBalance() (float64, error) {
-// 	protoOATraderReq := ctrader.Message[ctrader.ProtoOATraderReq]{
-// 		ClientMsgID: utils.GetClientMsgID(),
-// 		PayloadType: configs_helper.TraderConfiguration.PayloadTypes["protooatraderreq"],
-// 		Payload: ctrader.ProtoOATraderReq{
-// 			CtidTraderAccountId: configs_helper.CTraderAccountConfig.CtidTraderAccountId,
-// 		},
-// 	}
-
-// 	if err := utils.SendMsg(api.ws, protoOATraderReq); err != nil {
-// 		return 0, err
-// 	}
-
-// 	resp, err := utils.ReadMsg(api.ws)
-// 	if err != nil {
-// 		return 0, err
-// 	}
-// 	if err = utils.CheckResponse(resp, configs_helper.TraderConfiguration.PayloadTypes["protooatraderres"], err); err != nil {
-// 		return 0, err
-// 	}
-
-// 	var protoOATraderRes *ctrader.Message[ctrader.ProtoOATraderRes]
-// 	if err = json.Unmarshal(resp, &protoOATraderRes); err != nil {
-// 		return 0, err
-// 	}
-
-// 	return float64(protoOATraderRes.Payload.Trader.Balance) / 100.0, nil
 // }

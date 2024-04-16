@@ -36,6 +36,14 @@ func (api *CTrader) ReadMessage() error {
 		if err != nil {
 			return err
 		}
+	case configs_helper.TraderConfiguration.PayloadTypes["protooatraderres"]:
+		balance, err := saveProtoOATraderRes(baseMsg)
+		if err != nil {
+			return err
+		}
+		if api.onBalanceUpdate != nil {
+			api.onBalanceUpdate(balance)
+		}
 	case configs_helper.TraderConfiguration.PayloadTypes["protooasubscribespotsres"]:
 		logger.LogMessage("spots subscribed successfully...")
 	case configs_helper.TraderConfiguration.PayloadTypes["hearbeatevent"]:
@@ -45,6 +53,16 @@ func (api *CTrader) ReadMessage() error {
 	}
 
 	return nil
+}
+
+// Take available balance.
+func saveProtoOATraderRes(baseMsg ctrader.Message[json.RawMessage]) (int64, error) {
+	var protoOATraderRes ctrader.ProtoOATraderRes
+	if err := json.Unmarshal(baseMsg.Payload, &protoOATraderRes); err != nil {
+		return -1, err
+	}
+
+	return protoOATraderRes.Trader.Balance, nil
 }
 
 // Update bid and ask in mongodb.
@@ -102,4 +120,9 @@ func saveProtoOAGetTrendbarsRes(baseMsg ctrader.Message[json.RawMessage]) error 
 	}
 
 	return nil
+}
+
+// Callback for balance update.
+func (api *CTrader) SetOnBalanceUpdate(handler func(int64)) {
+	api.onBalanceUpdate = handler
 }
