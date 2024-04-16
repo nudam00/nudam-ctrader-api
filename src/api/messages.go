@@ -9,15 +9,15 @@ import (
 )
 
 // Get trendbars based on given symbol.
-func (api *CTrader) GetTrendbars(symbol string) error {
-	fromTimestamp, toTimestamp := utils.CalculateTimestamps(int(configs_helper.TraderConfiguration.Periods["d1"].NumberDays)) // then it will get the biggest possible amount of data
-	periodId := configs_helper.TraderConfiguration.Periods["d1"].Value
+func (api *CTrader) GetTrendbars(symbol, period string) error {
+	fromTimestamp, toTimestamp := utils.CalculateTimestamps(int(configs_helper.TraderConfiguration.Periods[period].NumberDays)) // then it will get the biggest possible amount of data
+	periodId := configs_helper.TraderConfiguration.Periods[period].Value
 
 	symbolId, err := mongodb.FindSymbolId(symbol)
 	if err != nil {
 		return err
 	}
-	count := utils.CalculateCountBars("d1")
+	count := utils.CalculateCountBars(period)
 
 	protoOAGetTrendbarsReq := ctrader.Message[ctrader.ProtoOAGetTrendbarsReq]{
 		ClientMsgID: utils.GetClientMsgID(),
@@ -33,6 +33,25 @@ func (api *CTrader) GetTrendbars(symbol string) error {
 	}
 
 	reqBytes, err := json.Marshal(protoOAGetTrendbarsReq)
+	if err != nil {
+		return err
+	}
+	api.sendMessage(reqBytes)
+
+	return nil
+}
+
+// Get current balance.
+func (api *CTrader) SendMsgGetBalance() error {
+	protoOATraderReq := ctrader.Message[ctrader.ProtoOATraderReq]{
+		ClientMsgID: utils.GetClientMsgID(),
+		PayloadType: configs_helper.TraderConfiguration.PayloadTypes["protooatraderreq"],
+		Payload: ctrader.ProtoOATraderReq{
+			CtidTraderAccountId: configs_helper.CTraderAccountConfig.CtidTraderAccountId,
+		},
+	}
+
+	reqBytes, err := json.Marshal(protoOATraderReq)
 	if err != nil {
 		return err
 	}
@@ -75,34 +94,4 @@ func (api *CTrader) GetTrendbars(symbol string) error {
 // 	}
 
 // 	return resp, nil
-// }
-
-// // Gets current balance.
-// func (api *CTrader) SendMsgGetBalance() (float64, error) {
-// 	protoOATraderReq := ctrader.Message[ctrader.ProtoOATraderReq]{
-// 		ClientMsgID: utils.GetClientMsgID(),
-// 		PayloadType: configs_helper.TraderConfiguration.PayloadTypes["protooatraderreq"],
-// 		Payload: ctrader.ProtoOATraderReq{
-// 			CtidTraderAccountId: configs_helper.CTraderAccountConfig.CtidTraderAccountId,
-// 		},
-// 	}
-
-// 	if err := utils.SendMsg(api.ws, protoOATraderReq); err != nil {
-// 		return 0, err
-// 	}
-
-// 	resp, err := utils.ReadMsg(api.ws)
-// 	if err != nil {
-// 		return 0, err
-// 	}
-// 	if err = utils.CheckResponse(resp, configs_helper.TraderConfiguration.PayloadTypes["protooatraderres"], err); err != nil {
-// 		return 0, err
-// 	}
-
-// 	var protoOATraderRes *ctrader.Message[ctrader.ProtoOATraderRes]
-// 	if err = json.Unmarshal(resp, &protoOATraderRes); err != nil {
-// 		return 0, err
-// 	}
-
-// 	return float64(protoOATraderRes.Payload.Trader.Balance) / 100.0, nil
 // }

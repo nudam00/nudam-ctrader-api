@@ -15,7 +15,7 @@ var (
 	MongoDbConfig        common.MongoDbConfig
 )
 
-// Initializes cTrader config with basic variables.
+// Initialize cTrader config with basic variables.
 func InitializeConfig(path string) error {
 	log.Printf("initializes config...")
 

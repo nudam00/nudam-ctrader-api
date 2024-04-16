@@ -19,15 +19,14 @@ type MongoDbConfig struct {
 }
 
 type TraderConfiguration struct {
-	PayloadTypes      map[string]int      `json:"payloadTypes"`
-	Periods           map[string]Period   `json:"periods"`
-	QuoteType         map[string]int64    `json:"quoteType"`
-	OrderType         map[string]int64    `json:"orderType"`
-	TradeSide         map[string]int64    `json:"tradeSide"`
-	TimeInForce       map[string]int64    `json:"timeInForce"`
-	StopTriggerMethod map[string]int64    `json:"stopTriggerMethod"`
-	Pips              map[string]Dividers `json:"pips"`
-	CurrencyPairs     []string            `json:"currencyPairs"`
+	PayloadTypes      map[string]int    `json:"payloadTypes"`
+	Periods           map[string]Period `json:"periods"`
+	QuoteType         map[string]int64  `json:"quoteType"`
+	OrderType         map[string]int64  `json:"orderType"`
+	TradeSide         map[string]int64  `json:"tradeSide"`
+	TimeInForce       map[string]int64  `json:"timeInForce"`
+	StopTriggerMethod map[string]int64  `json:"stopTriggerMethod"`
+	CurrencyPairs     []string          `json:"currencyPairs"`
 }
 
 type Period struct {
@@ -37,13 +36,7 @@ type Period struct {
 }
 
 type Strategy struct {
-	Ema      []int   `json:"ema"`
-	Risk     float64 `json:"risk"`
-	Leverage int64   `json:"leverage"`
-}
-
-type Dividers struct {
-	Pips    uint64 `json:"pips"`
-	Price   uint64 `json:"price"`
-	LotUnit uint64 `json:"lotUnit"`
+	Ema      []float64 `json:"ema"`
+	Risk     float64   `json:"risk"`
+	Leverage int64     `json:"leverage"`
 }

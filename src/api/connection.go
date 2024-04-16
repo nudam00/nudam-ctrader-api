@@ -141,6 +141,14 @@ func (api *CTrader) saveAvailableSymbols() error {
 	}
 
 	for _, symbol := range protoOASymbolsListRes.Payload.Symbol {
+		emas := make([]mongodb.Ema, 0, len(configs_helper.TraderConfiguration.Periods))
+		for _, period := range configs_helper.TraderConfiguration.Periods {
+			emas = append(emas, mongodb.Ema{
+				Period: period.Value,
+				Values: nil,
+			})
+		}
+
 		symbolData := mongodb.MongoDbData{
 			SymbolId:    symbol.SymbolId,
 			SymbolName:  *symbol.SymbolName,
@@ -148,9 +156,17 @@ func (api *CTrader) saveAvailableSymbols() error {
 			StepVolume:  0,
 			LotSize:     0,
 			Prices:      mongodb.PriceData{},
-			ClosePrices: nil,
+			Ema:         emas,
 		}
-		if err = mongodb.SaveToMongo(symbolData, bson.M{"symbolId": symbol.SymbolId}); err != nil {
+		docMap := make(bson.M)
+		data, err := bson.Marshal(symbolData)
+		if err != nil {
+			return err
+		}
+		bson.Unmarshal(data, &docMap)
+		delete(docMap, "position")
+
+		if err = mongodb.SaveToMongo(docMap, bson.M{"symbolId": symbol.SymbolId}); err != nil {
 			return err
 		}
 	}
@@ -235,10 +251,6 @@ func (api *CTrader) sendMsgSubscribeSpot() error {
 	}
 
 	if err := utils.SendMsg(api.ws, protoOASubscribeSpotsReq); err != nil {
-		return err
-	}
-	_, err := utils.ReadMsg(api.ws)
-	if err != nil {
 		return err
 	}
 

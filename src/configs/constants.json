@@ -59,9 +59,6 @@
       "double_trade": 3,
       "double_opposite": 4
     },
-    "pips": {
-      "eurusd": { "pips": 10, "price": 100000, "lotUnit": 100000 }
-    },
     "currencyPairs": [
       "EURUSD",
       "USDJPY",

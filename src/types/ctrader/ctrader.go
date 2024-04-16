@@ -60,7 +60,6 @@ type ProtoOAGetTrendbarsRes struct {
 	Timestamp           *int64     `json:"timestamp"`
 	Trendbar            []Trendbar `json:"trendbar"`
 	SymbolId            int64      `json:"symbolId"`
-	ClosePrices         []float64  `json:"closePrices"`
 }
 
 type Trendbar struct {
@@ -113,12 +112,12 @@ type ProtoOANewOrderReq struct {
 	StopTriggerMethod   *int64   `json:"stopTriggerMethod"`
 }
 
-// Get current trader's informations request message.
+// Get current trader's information request message.
 type ProtoOATraderReq struct {
 	CtidTraderAccountId int64 `json:"ctidTraderAccountId"`
 }
 
-// Get current trader's informations response message.
+// Get current trader's information response message.
 type ProtoOATraderRes struct {
 	CtidTraderAccountId int64         `json:"ctidTraderAccountId"`
 	Trader              ProtoOATrader `json:"trader"`

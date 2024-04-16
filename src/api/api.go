@@ -5,17 +5,19 @@ import (
 )
 
 type CTraderAPI interface {
-	GetTrendbars(symbol string) error
+	GetTrendbars(symbol, period string) error
 	ReadMessage() error
 	// SendMsgNewOrder(symbol string, orderType, tradeSide, volume, stopLoss int64) ([]byte, error)
-	// SendMsgGetBalance() (float64, error)
+	SendMsgGetBalance() error
+	SetOnBalanceUpdate(handler func(int64))
 	Open() error
 	Close() error
 }
 
 type CTrader struct {
-	ws          *websocket.Conn
-	sendChannel chan []byte
+	ws              *websocket.Conn
+	sendChannel     chan []byte
+	onBalanceUpdate func(int64)
 }
 
 func NewApi() CTraderAPI {
