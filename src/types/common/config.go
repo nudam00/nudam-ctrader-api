@@ -12,22 +12,31 @@ type CTraderAccountConfig struct {
 	AccessToken         string `json:"accessToken"`
 }
 
+type MongoDbConfig struct {
+	Uri          string `json:"uri"`
+	DatabaseName string `json:"databaseName"`
+	Collection   string `json:"collection"`
+}
+
 type TraderConfiguration struct {
 	PayloadTypes      map[string]int    `json:"payloadTypes"`
 	Periods           map[string]Period `json:"periods"`
-	QuoteType         map[string]int    `json:"quoteType"`
-	OrderType         map[string]int    `json:"orderType"`
-	TradeSide         map[string]int    `json:"tradeSide"`
-	TimeInForce       map[string]int    `json:"timeInForce"`
-	StopTriggerMethod map[string]int    `json:"stopTriggerMethod"`
+	QuoteType         map[string]int64  `json:"quoteType"`
+	OrderType         map[string]int64  `json:"orderType"`
+	TradeSide         map[string]int64  `json:"tradeSide"`
+	TimeInForce       map[string]int64  `json:"timeInForce"`
+	StopTriggerMethod map[string]int64  `json:"stopTriggerMethod"`
+	CurrencyPairs     []string          `json:"currencyPairs"`
 }
 
 type Period struct {
-	Value      int    `json:"value"`
+	Value      int64  `json:"value"`
 	CountBars  uint32 `json:"countBars"`
 	NumberDays uint32 `json:"numberDays"`
 }
 
 type Strategy struct {
-	Ema []int `json:"ema"`
+	Ema      []float64 `json:"ema"`
+	Risk     float64   `json:"risk"`
+	Leverage int64     `json:"leverage"`
 }

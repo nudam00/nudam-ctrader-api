@@ -1,0 +1,4 @@
+src/configs/config.json
+src/configs/strategy.json
+src/strategy/
+**/.DS_Store

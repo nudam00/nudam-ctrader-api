@@ -7,15 +7,13 @@ import (
 )
 
 var (
-	config_path  = "./configs"
-	symbolPeriod = map[string]string{"AUDCHF": "m15"}
+	config_path = "./configs"
 )
 
 func main() {
-	err := configs_helper.InitializeConfig(config_path)
-	if err != nil {
+	if err := configs_helper.InitializeConfig(config_path); err != nil {
 		log.Panic(err)
 	}
-
-	runners.TradeRoutines(symbolPeriod)
+	runner := runners.NewRunner()
+	runner.StartRoutines()
 }
